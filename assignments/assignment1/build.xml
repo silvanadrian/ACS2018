@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project basedir="." default="build" name="acertainbookstore">
+  <path id="acertainbookstore.classpath">
+    <fileset dir="lib">
+      <include name="**/*.jar"/>
+    </fileset>
+    <pathelement location="bin"/>
+    </path>
+    <taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
+    <target name="init">
+        <mkdir dir="bin"/>
+        <copy includeemptydirs="false" todir="bin">
+            <fileset dir="src">
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+    </target>
+    <target name="clean">
+        <delete dir="bin"/>
+    </target>
+    <target depends="clean" name="cleanall"/>
+    <target depends="build-subprojects,build-project" name="build"/>
+    <target name="build-subprojects"/>
+    <target depends="init" name="build-project">
+        <echo message="${ant.project.name}: ${ant.file}"/>
+        <javac debug="true" destdir="bin" includeantruntime="false" source="1.8" target="1.8">
+            <src path="src"/>
+            <classpath refid="acertainbookstore.classpath"/>
+        </javac>
+    </target>
+    <target name="server">
+      <java classname="com.acertainbookstore.server.BookStoreHTTPServer" failonerror="true" fork="yes">
+        <jvmarg line="-Dport=${port}"/>
+        <classpath refid="acertainbookstore.classpath"/>
+      </java>
+    </target>
+    <target name="test">
+      <parallel>
+          <if>
+            <equals arg1="${localtest}" arg2="false"/>
+            <then>
+              <sequential>
+                <java classname="com.acertainbookstore.server.BookStoreHTTPServer" failonerror="true" fork="yes">
+                  <jvmarg line="-Dport=${port}"/>
+                  <classpath refid="acertainbookstore.classpath"/>
+                </java>
+              </sequential>
+            </then>
+          </if>
+        <sequential>
+          <sleep seconds="2"/>
+          <junit haltonfailure="no" showoutput="true" fork="yes">
+            <test name="com.acertainbookstore.client.tests.BookStoreTest" haltonfailure="no" />
+            <test name="com.acertainbookstore.client.tests.StockManagerTest" haltonfailure="no" />
+            <classpath refid="acertainbookstore.classpath"/>
+            <jvmarg line="-Dlocaltest=${localtest}"/>
+            <formatter usefile="false" type="brief"/>
+          </junit>
+          <if>
+            <equals arg1="${localtest}" arg2="false"/>
+            <then>
+              <echo message="End of test run, hit Ctrl-C to exit if you are running remote tests" />
+            </then>
+          </if>
+        </sequential>
+      </parallel>
+    </target>
+</project>
