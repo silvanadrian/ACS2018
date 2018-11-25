@@ -88,6 +88,18 @@ public class CertainBookStore implements BookStore, StockManager {
 		validateISBNInStock(isbn); // Check if the book has valid ISBN and in stock
 	}
 
+	private synchronized void validate(BookRating bookRating) throws BookStoreException {
+	    int isbn = bookRating.getISBN();
+        if (BookStoreUtility.isInvalidISBN(isbn)) { // Check if the book has valid ISBN
+            throw new BookStoreException(BookStoreConstants.ISBN + isbn + BookStoreConstants.INVALID);
+        }
+
+        int rating = bookRating.getRating();
+        if (BookStoreUtility.isInvalidRating(rating)) {
+            throw new BookStoreException(BookStoreConstants.RATING + rating + BookStoreConstants.INVALID);
+        }
+    }
+
 	private synchronized void validateISBNInStock(Integer ISBN) throws BookStoreException {
 		if (BookStoreUtility.isInvalidISBN(ISBN)) { // Check if the book has valid ISBN
 			throw new BookStoreException(BookStoreConstants.ISBN + ISBN + BookStoreConstants.INVALID);
@@ -337,7 +349,15 @@ public class CertainBookStore implements BookStore, StockManager {
 	 */
 	@Override
 	public synchronized void rateBooks(Set<BookRating> bookRating) throws BookStoreException {
-		throw new BookStoreException();
+		if (bookRating == null) {
+			throw  new BookStoreException(BookStoreConstants.NULL_INPUT);
+		}
+
+		for (BookRating br : bookRating) {
+            validate(br);
+
+        }
+		//throw new BookStoreException();
 	}
 
 	/*

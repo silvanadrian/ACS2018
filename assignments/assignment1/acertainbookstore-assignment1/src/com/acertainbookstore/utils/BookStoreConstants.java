@@ -30,7 +30,7 @@ public final class BookStoreConstants {
 
 	// Constants used when creating exception messages
 
-	/** The Constant INVALID when the book has an invalid ISBN. */
+	/** The Constant INVALID when the book has an invalid ISBN or Rating. */
 	public static final String INVALID = " is invalid";
 
 	/** The Constant DUPLICATED when the book is already in the store. */

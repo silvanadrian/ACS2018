@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.acertainbookstore.business.BookRating;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -348,6 +349,48 @@ public class BookStoreTest {
 		assertTrue(booksInStorePreTest.containsAll(booksInStorePostTest)
 				&& booksInStorePreTest.size() == booksInStorePostTest.size());
 	}
+
+    /**
+     * Initial test rateBook
+     * @throws BookStoreException
+     */
+	@Test(expected = BookStoreException.class)
+	public void shouldRateBookException() throws BookStoreException {
+	    Set<BookRating> bookRatingSet = new HashSet<>();
+	    bookRatingSet.add(new BookRating(TEST_ISBN, 2));
+        client.rateBooks(bookRatingSet);
+	}
+
+    /**
+     * Null Rating not allowed
+     * @throws BookStoreException
+     */
+    @Test(expected = BookStoreException.class)
+    public void shouldRateBookNullException() throws BookStoreException {
+        client.rateBooks(null);
+    }
+
+    /**
+     * ISBN not valid
+     * @throws BookStoreException
+     */
+    @Test(expected = BookStoreException.class)
+    public void shouldRateInvalidISBN() throws BookStoreException {
+        Set<BookRating> bookRatingSet = new HashSet<>();
+        bookRatingSet.add(new BookRating(0, 2));
+        client.rateBooks(bookRatingSet);
+    }
+
+    /**
+     * Rating not valid
+     * @throws BookStoreException
+     */
+    @Test(expected = BookStoreException.class)
+    public void shouldRateInvalidRating() throws BookStoreException {
+        Set<BookRating> bookRatingSet = new HashSet<>();
+        bookRatingSet.add(new BookRating(TEST_ISBN, 10));
+        client.rateBooks(bookRatingSet);
+    }
 
 	/**
 	 * Tear down after class.
