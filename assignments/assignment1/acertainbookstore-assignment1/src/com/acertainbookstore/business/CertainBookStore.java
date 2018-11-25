@@ -355,7 +355,10 @@ public class CertainBookStore implements BookStore, StockManager {
      */
     @Override
     public synchronized List<StockBook> getBooksInDemand() throws BookStoreException {
-        throw new BookStoreException();
+        return bookMap.values().stream()
+                      .filter(BookStoreBook::hadSaleMiss)
+                      .map(BookStoreBook::immutableStockBook)
+                      .collect(Collectors.toList());
     }
 
     /*
@@ -369,8 +372,11 @@ public class CertainBookStore implements BookStore, StockManager {
             throw new BookStoreException(BookStoreConstants.NULL_INPUT);
         }
 
+        for (BookRating book : bookRating) {
+            validate(book);
+        }
+
         for (BookRating br : bookRating) {
-            validate(br);
             bookMap.get(br.getISBN()).addRating(br.getRating());
         }
     }

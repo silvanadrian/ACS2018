@@ -130,6 +130,13 @@ public class BookStoreHTTPMessageHandler extends AbstractHandler {
 				getStockBooksByISBN(request, response);
 				break;
 
+			case RATEBOOKS:
+				getStockBooksByISBN(request, response);
+				break;
+
+			case TOPRATEDBOOKS:
+				break;
+
 			default:
 				System.err.println("Unsupported message tag.");
 				break;
