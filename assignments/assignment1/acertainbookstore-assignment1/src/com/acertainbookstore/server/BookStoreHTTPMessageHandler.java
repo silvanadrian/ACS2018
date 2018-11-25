@@ -9,6 +9,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.acertainbookstore.business.BookRating;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
@@ -131,11 +132,16 @@ public class BookStoreHTTPMessageHandler extends AbstractHandler {
 				break;
 
 			case RATEBOOKS:
-				getStockBooksByISBN(request, response);
+				rateBooks(request, response);
 				break;
 
 			case TOPRATEDBOOKS:
+                getTopRatedBooks(request, response);
 				break;
+
+            case BOOKSINDEMAND:
+                getBooksInDemand(response);
+                break;
 
 			default:
 				System.err.println("Unsupported message tag.");
@@ -147,7 +153,54 @@ public class BookStoreHTTPMessageHandler extends AbstractHandler {
 		baseRequest.setHandled(true);
 	}
 
-	/**
+	/** get top rated books */
+    private void getTopRatedBooks(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String numBooksStr = URLDecoder.decode(request.getParameter(BookStoreConstants.BOOK_NUM_PARAM), StandardCharsets.UTF_8);
+        BookStoreResponse bookStoreResponse = new BookStoreResponse();
+
+        try {
+            int numBooks = BookStoreUtility.convertStringToInt(numBooksStr);
+            bookStoreResponse.setList(myBookStore.getTopRatedBooks(numBooks));
+        } catch (BookStoreException e) {
+            bookStoreResponse.setException(e);
+        }
+
+        byte[] serializedResponseContent = serializer.get().serialize(bookStoreResponse);
+        response.getOutputStream().write(serializedResponseContent);
+    }
+
+    /** Gets books in demand.*/
+    private void getBooksInDemand(HttpServletResponse response) throws IOException {
+        BookStoreResponse bookStoreResponse = new BookStoreResponse();
+
+        try {
+            bookStoreResponse.setList(myBookStore.getBooksInDemand());
+        } catch (BookStoreException e) {
+            bookStoreResponse.setException(e);
+        }
+
+        byte[] serializedResponseContent = serializer.get().serialize(bookStoreResponse);
+        response.getOutputStream().write(serializedResponseContent);
+    }
+
+    /** Rates the books*/
+    @SuppressWarnings("unchecked")
+    private void rateBooks(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        byte[] serializedRequestContent = getSerializedRequestContent(request);
+
+        Set<BookRating> bookstoRate = (Set<BookRating>) serializer.get().deserialize(serializedRequestContent);
+        BookStoreResponse bookStoreResponse = new BookStoreResponse();
+
+        try {
+            myBookStore.rateBooks(bookstoRate);
+        } catch (BookStoreException e) {
+            bookStoreResponse.setException(e);
+        }
+        byte[] serializedResponseContent = serializer.get().serialize(bookStoreResponse);
+        response.getOutputStream().write(serializedResponseContent);
+    }
+
+    /**
 	 * Gets the stock books by ISBN.
 	 *
 	 * @param request
