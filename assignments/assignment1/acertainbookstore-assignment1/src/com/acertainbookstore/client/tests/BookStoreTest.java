@@ -433,7 +433,11 @@ public class BookStoreTest {
     @Test
     public void shouldReturnTopRatedBooks() throws BookStoreException {
         addBooks(3, 2);
-        Set<BookRating> bookRatingSet = new HashSet<>(Arrays.asList(new BookRating(TEST_ISBN, 3), new BookRating(3, 4)));
+        Set<BookRating> bookRatingSet = new HashSet<>(
+                Arrays.asList(new BookRating(TEST_ISBN, 3),
+                              new BookRating(TEST_ISBN, 2),
+                              new BookRating(3, 4),
+                              new BookRating(3, 5)));
         client.rateBooks(bookRatingSet);
         assertEquals("Test of Thrones", client.getTopRatedBooks(1).get(0).getTitle());
     }
