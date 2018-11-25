@@ -27,3 +27,6 @@
 *.synctex.gz
 
 node_modules/
+
+*.iml
+.idea/
