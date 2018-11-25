@@ -97,6 +97,10 @@ public class CertainBookStore implements BookStore, StockManager {
             throw new BookStoreException(BookStoreConstants.ISBN + isbn + BookStoreConstants.INVALID);
         }
 
+        if (!bookMap.containsKey(isbn)) {// Check if the book is in stock
+            throw new BookStoreException(BookStoreConstants.ISBN + isbn + BookStoreConstants.NOT_AVAILABLE);
+        }
+
         int rating = bookRating.getRating();
         if (BookStoreUtility.isInvalidRating(rating)) {
             throw new BookStoreException(BookStoreConstants.RATING + rating + BookStoreConstants.INVALID);

@@ -389,13 +389,23 @@ public class BookStoreTest {
     }
 
     /**
+     * Book not in stock
+     * @throws BookStoreException
+     */
+    @Test(expected = BookStoreException.class)
+    public void shouldRateNotAvailableBook() throws BookStoreException {
+        Set<BookRating> bookRatingSet = new HashSet<>(Collections.singletonList(new BookRating(9, 2)));
+        client.rateBooks(bookRatingSet);
+    }
+
+
+    /**
      * Rating not valid
      * @throws BookStoreException
      */
     @Test(expected = BookStoreException.class)
     public void shouldRateInvalidRating() throws BookStoreException {
-        Set<BookRating> bookRatingSet = new HashSet<>();
-        bookRatingSet.add(new BookRating(TEST_ISBN, 10));
+        Set<BookRating> bookRatingSet = new HashSet<>(Collections.singletonList(new BookRating(TEST_ISBN, 10)));
         client.rateBooks(bookRatingSet);
     }
 
