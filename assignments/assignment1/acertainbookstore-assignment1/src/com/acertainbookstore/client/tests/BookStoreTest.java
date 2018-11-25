@@ -1,12 +1,16 @@
 package com.acertainbookstore.client.tests;
 
+import static java.util.Collections.singletonList;
 import static org.junit.Assert.*;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import com.acertainbookstore.business.BookRating;
+import com.acertainbookstore.business.BookStoreBook;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -351,14 +355,17 @@ public class BookStoreTest {
 	}
 
     /**
-     * Initial test rateBook
+     * Test Rating on a book
      * @throws BookStoreException
      */
-	@Test(expected = BookStoreException.class)
-	public void shouldRateBookException() throws BookStoreException {
+	@Test
+	public void shouldRateBook() throws BookStoreException {
 	    Set<BookRating> bookRatingSet = new HashSet<>();
 	    bookRatingSet.add(new BookRating(TEST_ISBN, 2));
         client.rateBooks(bookRatingSet);
+        List<StockBook> book = storeManager.getBooksByISBN(new HashSet<>(singletonList(TEST_ISBN)));
+        assertEquals(2, book.get(0).getTotalRating());
+        assertEquals(1, book.get(0).getNumTimesRated());
 	}
 
     /**
@@ -392,7 +399,46 @@ public class BookStoreTest {
         client.rateBooks(bookRatingSet);
     }
 
-	/**
+    /**
+     * Get top rated books, invalid number
+     * @throws BookStoreException
+     */
+    @Test(expected = BookStoreException.class)
+    public void shouldReturnTopRatedBooksInvNumb() throws BookStoreException {
+        client.getTopRatedBooks(-1);
+    }
+
+    /**
+     * Get 0 top rated books
+     */
+    @Test
+    public void shouldReturnEmptyTopRatedList() throws BookStoreException {
+        assertEquals(Collections.emptyList(), client.getTopRatedBooks(0));
+    }
+
+    /**
+     * Get all possible books
+     */
+    @Test
+    public void shouldReturnAllTopRatedBooks() throws BookStoreException {
+        addBooks(3, 2);
+        Set<BookRating> bookRatingSet = new HashSet<>(Arrays.asList(new BookRating(TEST_ISBN, 3), new BookRating(3, 4)));
+        client.rateBooks(bookRatingSet);
+        assertEquals(2, client.getTopRatedBooks(100).size());
+    }
+
+    /**
+     * Get top rated books
+     */
+    @Test
+    public void shouldReturnTopRatedBooks() throws BookStoreException {
+        addBooks(3, 2);
+        Set<BookRating> bookRatingSet = new HashSet<>(Arrays.asList(new BookRating(TEST_ISBN, 3), new BookRating(3, 4)));
+        client.rateBooks(bookRatingSet);
+        assertEquals("Test of Thrones", client.getTopRatedBooks(1).get(0).getTitle());
+    }
+
+    /**
 	 * Tear down after class.
 	 *
 	 * @throws BookStoreException
