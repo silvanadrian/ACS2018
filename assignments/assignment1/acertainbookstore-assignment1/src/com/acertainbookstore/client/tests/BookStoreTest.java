@@ -43,7 +43,7 @@ public class BookStoreTest {
 	private static final int NUM_COPIES = 5;
 
 	/** The local test. */
-	private static boolean localTest = false;
+	private static boolean localTest = true;
 
 	/** The store manager. */
 	private static StockManager storeManager;
@@ -366,6 +366,24 @@ public class BookStoreTest {
         List<StockBook> book = storeManager.getBooksByISBN(new HashSet<>(singletonList(TEST_ISBN)));
         assertEquals(2, book.get(0).getTotalRating());
         assertEquals(1, book.get(0).getNumTimesRated());
+	}
+
+    /**
+     * Test all or nothing semantics with ratings
+     * @throws BookStoreException
+     */
+	@Test
+	public void shouldRateNoBook() throws BookStoreException {
+		Set<BookRating> bookRatingSet = new HashSet<>();
+		bookRatingSet.add(new BookRating(TEST_ISBN, 3));
+		bookRatingSet.add(new BookRating(TEST_ISBN, 6));
+		try {
+			client.rateBooks(bookRatingSet);
+		} catch (BookStoreException e) {
+			List<StockBook> books = storeManager.getBooksByISBN(new HashSet<>(singletonList(TEST_ISBN)));
+			assertEquals(0, books.get(0).getTotalRating());
+			assertEquals(0, books.get(0).getNumTimesRated());
+		}
 	}
 
     /**

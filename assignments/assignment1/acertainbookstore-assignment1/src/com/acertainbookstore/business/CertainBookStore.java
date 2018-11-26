@@ -92,14 +92,7 @@ public class CertainBookStore implements BookStore, StockManager {
     }
 
     private synchronized void validate(BookRating bookRating) throws BookStoreException {
-        int isbn = bookRating.getISBN();
-        if (BookStoreUtility.isInvalidISBN(isbn)) { // Check if the book has valid ISBN
-            throw new BookStoreException(BookStoreConstants.ISBN + isbn + BookStoreConstants.INVALID);
-        }
-
-        if (!bookMap.containsKey(isbn)) {// Check if the book is in stock
-            throw new BookStoreException(BookStoreConstants.ISBN + isbn + BookStoreConstants.NOT_AVAILABLE);
-        }
+        validateISBNInStock(bookRating.getISBN());
 
         int rating = bookRating.getRating();
         if (BookStoreUtility.isInvalidRating(rating)) {
