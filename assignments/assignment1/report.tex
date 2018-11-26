@@ -2,6 +2,7 @@
 \usepackage[english, science, large]{../template/ku-frontpage}
 \usepackage{tabularx}
 \usepackage{ltablex}
+\usepackage{enumitem}
 \usepackage[cache=false]{minted}
 \setminted[erlang]{
 frame=lines,
@@ -17,8 +18,8 @@ breaklines}
 }
 \begin{document}
 
-\title{The Flamingo Route}
-\subtitle{Assignment 4}
+\title{ACS Programming Assignment 1}
+\subtitle{}
 
 \author{Kai Arne S. Myklebust, Silvan Adrian}
 \date{Handed in: \today}
@@ -26,76 +27,33 @@ breaklines}
 \maketitle
 \tableofcontents
 
-\section{Solution}
-
-\subsection{Files}
-All Files are situated in the \textbf{src/} folder:
-\begin{itemize}
-	\item \textbf{flamingo.erl} The flamingo server implmentation
-	\item \textbf{greetings.erl} The greetings module implementation
-	\item \textbf{hello.erl} The hello module implementation
-	\item \textbf{mood.erl} Mood module implementation
-	\item \textbf{counter.erl} Counter module implementation
-	\item \textbf{test\_xxx.erl} Tests for each module
-\end{itemize}
-
-\subsection{Running the programm}
-Out of convenience we used a Emakefile which compiles all the erlang files in one go then rather compile each file on it's own.
-This can be done by using the erlang shell and run:
-
-\begin{minted}{erlang}
-make:all([load]).
-\end{minted}
-
-\subsection{Running the tests}
-The tests can be run with eunit, we included tests for each module in a own file.
-Example running tests for flamingo:
-\begin{minted}{erlang}
-eunit:test(test_flamingo, [verbose]).
-\end{minted}
-
-\section{Implementation}
-
-\subsection{Assumptions}
-We assumed that empty Paths shouldn't be inputed into a routing group, therefore they get ignored.
-Also we decided that duplicated paths get removed from existing routing groups and get added as a new routing group.
-In case the path of a routing group is empty the routing group gets removed from the routing group list.
-
-\subsection{Our implementation}
-We chose to implement the routing groups as a list, which contains triplets consisting of List of Paths, Function and State.
-When a new route gets registered we traverse the routing group list and check every single path in each routing group to either update it or insert it as a new routing group.\\
-For prefix handling we also traverse each routing group to search for the longest matching prefix in each group, from there we take the longest out of the longest matching ones.
-
-Sadly we weren't able to solve the issue of functions of each routing group only running consecutively.
-
-\subsection{Possible improvements}
-We started off doing it with a map, but ended up using a list since it was easier to handle.
-For big routing groups a map might be faster due to easier lookups and handling of the data.
-Also traversing the lists is not very nice due to lists in lists which ends up to be not easily readable.
-
-For letting the function in a routing group not run in a concurrent fashion we would use spawn\_link to keep track if a process is still running or not.
-
-\section{Assessment}
-
-\subsection{Scope of Test Cases}
-We tested edge cases as well as happy cases, which we came up with.
-The only thing we weren't able to test is some try/catches where we weren't able to produce an error case.
-Also thanks to our test cases we were able to find some bugs, for example the empty Path and empty Path list.
-
-\subsection{Correctness}
-We are quite happy with the result, since our test cases and the OnlineTA didn't find any more bugs or errors.
-So we come to the conclusion that our code is relatively stable and useable.
-
-\subsection{Code Quality}
-Our code is well structured and commented where needed, on the other hand our loop seems to be a little bloated which might not seem that nice. But we weren't able to find a much better solution for it, so we are quite happy with it.
-We followed closely the requirements specified in the assignment, which we wrote tests for. Therefore we think that the functionality matches the requirements.
+\section{Questions for Discussion on Architecture}
 
 
-\appendix
-\section{Code Listing}
-\inputminted{erlang}{handin/src/flamingo.erl}
-\inputminted{erlang}{handin/src/counter.erl}
-\inputminted{erlang}{handin/src/mood.erl}
-\inputminted{erlang}{handin/src/hello.erl}
+\subsection{1}
+
+\subsubsection{Implementation}
+\begin{enumerate}[label=(\alph*)]
+	\item 
+\end{enumerate}
+
+\subsubsection{Tests}
+\begin{enumerate}[label=(\alph*)]
+	\item 
+\end{enumerate}
+
+\subsubsection{How does your implementation and tests address all-or-nothing semantics?}
+
+\subsubsection{How did you test whether the service behaves according to the interface regardless of use of RPCs or local calls?}
+
+\subsection{2}
+
+\subsection{3}
+
+\subsection{4}
+
+\subsection{5}
+
+\subsection{6}
 
 \end{document}}
