@@ -1,0 +1,9 @@
+*.class
+bin/
+*~
+
+# Package Files #
+*.war
+*.ear
+/bin/
+.DS_Store
