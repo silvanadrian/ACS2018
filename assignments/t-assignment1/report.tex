@@ -2,16 +2,6 @@
 \usepackage[english, science, large]{../template/ku-frontpage}
 \usepackage{tabularx}
 \usepackage{ltablex}
-\usepackage{enumitem}
-\usepackage[cache=false]{minted}
-\setminted[erlang]{
-frame=lines,
-framesep=2mm,
-baselinestretch=1.1,
-fontsize=\footnotesize,
-linenos,
-breaklines}
-\usemintedstyle{friendly}
 \hypersetup{
     colorlinks=false,
     pdfborder={0 0 0},
@@ -29,13 +19,17 @@ breaklines}
 
 \section{Question 1: Techniques for Performance}
 \subsection{Question 1.1}
+Concurrency may improve latency, but one must be careful because of locking and correctness. While using concurrency two processes may need to write on the same element and then one process needs to be locked and latency may get worse.
 \subsection{Question 1.2}
-\textbf{Batching}
-\textbf{Dallying}
+\textbf{Batching} is when you run multiple requests at once. One example is billing in a credit card company, where they run a monthly billing cycle. All data gets collected at the end of the month and sent at once. \\
+\textbf{Dallying} is when you wait until you have some requests accumulated and then run them. One example is where a request comes in too overwrite a disk block, but waits for more requests that may overwrite the same disk block. Then the first request would not be needed anymore. \\
+Batching may improve latency and throughput, but dallying typically incurs a latency penalty because it waits for more requests.
 \subsection{Question 1.3}
+Yes, because it makes one optimized path for common requests, where it tries to eliminate the need for reads and writes in lower level memory. But only goes deeper when needed.
 
 \section{Question 2: Fundamental Abstractions}
 \subsection{Question 2.1}
+
 \subsection{Question 2.2}
 \subsection{Question 2.3}
 \subsection{Question 2.4}
