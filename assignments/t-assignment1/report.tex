@@ -30,11 +30,24 @@ Yes, because it makes one optimized path for common requests, where it tries to 
 \section{Question 2: Fundamental Abstractions}
 \subsection{Question 2.1}
 
+
 \subsection{Question 2.2}
+
 \subsection{Question 2.3}
+
 \subsection{Question 2.4}
 
 \section{Question 3: Serializability \& Locking}
+
+\textbf{Schedule 1}\\
+Yes it is conflict-serializable, because there is no cycle in the precedence graph.
+\begin{figure}[!htb]
+	\center
+	\includegraphics[width=0.5\textwidth]{img/schedule1}
+	\caption{Precedence graph of schedule 1}
+\end{figure}\\
+\textbf{Schedule 2}\\
+Yes, since the precedence graph has no precedences and therefore also no cycle.
 
 \section{Question 4: Optimistic Concurrency Control}
 
