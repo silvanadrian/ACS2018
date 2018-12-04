@@ -10,6 +10,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 import com.acertainbookstore.interfaces.BookStore;
@@ -18,365 +22,421 @@ import com.acertainbookstore.utils.BookStoreConstants;
 import com.acertainbookstore.utils.BookStoreException;
 import com.acertainbookstore.utils.BookStoreUtility;
 
-/** {@link SingleLockConcurrentCertainBookStore} implements the {@link BookStore} and
+/**
+ * {@link SingleLockConcurrentCertainBookStore} implements the {@link BookStore} and
  * {@link StockManager} functionalities.
- * 
+ *
  * @see BookStore
  * @see StockManager
  */
 public class SingleLockConcurrentCertainBookStore implements BookStore, StockManager {
 
-	/** The mapping of books from ISBN to {@link BookStoreBook}. */
-	private Map<Integer, BookStoreBook> bookMap = null;
+    private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+    /**
+     * The mapping of books from ISBN to {@link BookStoreBook}.
+     */
+    private Map<Integer, BookStoreBook> bookMap;
 
-	/**
-	 * Instantiates a new {@link CertainBookStore}.
-	 */
-	public SingleLockConcurrentCertainBookStore() {
-		// Constructors are not synchronized
-		bookMap = new HashMap<>();
-	}
+    /**
+     * Instantiates a new {@link SingleLockConcurrentCertainBookStore}.
+     */
+    public SingleLockConcurrentCertainBookStore() {
+        // Constructors are not synchronized
+        bookMap = new HashMap<>();
+    }
 
-	private void validate(StockBook book) throws BookStoreException {
-		int isbn = book.getISBN();
-		String bookTitle = book.getTitle();
-		String bookAuthor = book.getAuthor();
-		int noCopies = book.getNumCopies();
-		float bookPrice = book.getPrice();
+    private void validate(StockBook book) throws BookStoreException {
+        int isbn = book.getISBN();
+        String bookTitle = book.getTitle();
+        String bookAuthor = book.getAuthor();
+        int noCopies = book.getNumCopies();
+        float bookPrice = book.getPrice();
 
-		if (BookStoreUtility.isInvalidISBN(isbn)) { // Check if the book has valid ISBN
-			throw new BookStoreException(BookStoreConstants.ISBN + isbn + BookStoreConstants.INVALID);
-		}
+        if (BookStoreUtility.isInvalidISBN(isbn)) { // Check if the book has valid ISBN
+            throw new BookStoreException(BookStoreConstants.ISBN + isbn + BookStoreConstants.INVALID);
+        }
 
-		if (BookStoreUtility.isEmpty(bookTitle)) { // Check if the book has valid title
-			throw new BookStoreException(BookStoreConstants.BOOK + book.toString() + BookStoreConstants.INVALID);
-		}
+        if (BookStoreUtility.isEmpty(bookTitle)) { // Check if the book has valid title
+            throw new BookStoreException(BookStoreConstants.BOOK + book.toString() + BookStoreConstants.INVALID);
+        }
 
-		if (BookStoreUtility.isEmpty(bookAuthor)) { // Check if the book has valid author
-			throw new BookStoreException(BookStoreConstants.BOOK + book.toString() + BookStoreConstants.INVALID);
-		}
+        if (BookStoreUtility.isEmpty(bookAuthor)) { // Check if the book has valid author
+            throw new BookStoreException(BookStoreConstants.BOOK + book.toString() + BookStoreConstants.INVALID);
+        }
 
-		if (BookStoreUtility.isInvalidNoCopies(noCopies)) { // Check if the book has at least one copy
-			throw new BookStoreException(BookStoreConstants.BOOK + book.toString() + BookStoreConstants.INVALID);
-		}
+        if (BookStoreUtility.isInvalidNoCopies(noCopies)) { // Check if the book has at least one copy
+            throw new BookStoreException(BookStoreConstants.BOOK + book.toString() + BookStoreConstants.INVALID);
+        }
 
-		if (bookPrice < 0.0) { // Check if the price of the book is valid
-			throw new BookStoreException(BookStoreConstants.BOOK + book.toString() + BookStoreConstants.INVALID);
-		}
+        if (bookPrice < 0.0) { // Check if the price of the book is valid
+            throw new BookStoreException(BookStoreConstants.BOOK + book.toString() + BookStoreConstants.INVALID);
+        }
 
-		if (bookMap.containsKey(isbn)) {// Check if the book is not in stock
-			throw new BookStoreException(BookStoreConstants.ISBN + isbn + BookStoreConstants.DUPLICATED);
-		}
-	}	
-	
-	private void validate(BookCopy bookCopy) throws BookStoreException {
-		int isbn = bookCopy.getISBN();
-		int numCopies = bookCopy.getNumCopies();
+        if (bookMap.containsKey(isbn)) {// Check if the book is not in stock
+            throw new BookStoreException(BookStoreConstants.ISBN + isbn + BookStoreConstants.DUPLICATED);
+        }
+    }
 
-		validateISBNInStock(isbn); // Check if the book has valid ISBN and in stock
+    private void validate(BookCopy bookCopy) throws BookStoreException {
+        int isbn = bookCopy.getISBN();
+        int numCopies = bookCopy.getNumCopies();
 
-		if (BookStoreUtility.isInvalidNoCopies(numCopies)) { // Check if the number of the book copy is larger than zero
-			throw new BookStoreException(BookStoreConstants.NUM_COPIES + numCopies + BookStoreConstants.INVALID);
-		}
-	}
-	
-	private void validate(BookEditorPick editorPickArg) throws BookStoreException {
-		int isbn = editorPickArg.getISBN();
-		validateISBNInStock(isbn); // Check if the book has valid ISBN and in stock
-	}
-	
-	private void validateISBNInStock(Integer ISBN) throws BookStoreException {
-		if (BookStoreUtility.isInvalidISBN(ISBN)) { // Check if the book has valid ISBN
-			throw new BookStoreException(BookStoreConstants.ISBN + ISBN + BookStoreConstants.INVALID);
-		}
-		if (!bookMap.containsKey(ISBN)) {// Check if the book is in stock
-			throw new BookStoreException(BookStoreConstants.ISBN + ISBN + BookStoreConstants.NOT_AVAILABLE);
-		}
-	}
+        validateISBNInStock(isbn); // Check if the book has valid ISBN and in stock
 
-	
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * com.acertainbookstore.interfaces.StockManager#addBooks(java.util.Set)
-	 */
-	public void addBooks(Set<StockBook> bookSet) throws BookStoreException {
-		if (bookSet == null) {
-			throw new BookStoreException(BookStoreConstants.NULL_INPUT);
-		}
+        if (BookStoreUtility.isInvalidNoCopies(numCopies)) { // Check if the number of the book copy is larger than zero
+            throw new BookStoreException(BookStoreConstants.NUM_COPIES + numCopies + BookStoreConstants.INVALID);
+        }
+    }
 
-		// Check if all are there
-		for (StockBook book : bookSet) {
-			validate(book);
-		}
+    private void validate(BookEditorPick editorPickArg) throws BookStoreException {
+        int isbn = editorPickArg.getISBN();
+        validateISBNInStock(isbn); // Check if the book has valid ISBN and in stock
+    }
 
-		for (StockBook book : bookSet) {
-			int isbn = book.getISBN();
-			bookMap.put(isbn, new BookStoreBook(book));
-		}
-	}
+    private void validateISBNInStock(Integer ISBN) throws BookStoreException {
+        if (BookStoreUtility.isInvalidISBN(ISBN)) { // Check if the book has valid ISBN
+            throw new BookStoreException(BookStoreConstants.ISBN + ISBN + BookStoreConstants.INVALID);
+        }
+        if (!bookMap.containsKey(ISBN)) {// Check if the book is in stock
+            throw new BookStoreException(BookStoreConstants.ISBN + ISBN + BookStoreConstants.NOT_AVAILABLE);
+        }
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * com.acertainbookstore.interfaces.StockManager#addCopies(java.util.Set)
-	 */
-	public void addCopies(Set<BookCopy> bookCopiesSet) throws BookStoreException {
-		int isbn;
-		int numCopies;
 
-		if (bookCopiesSet == null) {
-			throw new BookStoreException(BookStoreConstants.NULL_INPUT);
-		}
+    /*
+     * (non-Javadoc)
+     *
+     * @see
+     * com.acertainbookstore.interfaces.StockManager#addBooks(java.util.Set)
+     */
+    public void addBooks(Set<StockBook> bookSet) throws BookStoreException {
+        readWriteLock.writeLock().lock();
+        // even in case of exception always unlock lock
+        try {
+            if (bookSet == null) {
+                throw new BookStoreException(BookStoreConstants.NULL_INPUT);
+            }
 
-		for (BookCopy bookCopy : bookCopiesSet) {
-			validate(bookCopy);
-		}
+            // Check if all are there
+            for (StockBook book : bookSet) {
+                validate(book);
+            }
 
-		BookStoreBook book;
+            for (StockBook book : bookSet) {
+                int isbn = book.getISBN();
+                bookMap.put(isbn, new BookStoreBook(book));
+            }
+        } finally {
+            readWriteLock.writeLock().unlock();
+        }
+    }
 
-		// Update the number of copies
-		for (BookCopy bookCopy : bookCopiesSet) {
-			isbn = bookCopy.getISBN();
-			numCopies = bookCopy.getNumCopies();
-			book = bookMap.get(isbn);
-			book.addCopies(numCopies);
-		}
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see
+     * com.acertainbookstore.interfaces.StockManager#addCopies(java.util.Set)
+     */
+    public void addCopies(Set<BookCopy> bookCopiesSet) throws BookStoreException {
+        final Lock writeLock = readWriteLock.writeLock();
+        writeLock.lock();
+        try {
+            int isbn;
+            int numCopies;
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.acertainbookstore.interfaces.StockManager#getBooks()
-	 */
-	public List<StockBook> getBooks() {
-		Collection<BookStoreBook> bookMapValues = bookMap.values();
+            if (bookCopiesSet == null) {
+                throw new BookStoreException(BookStoreConstants.NULL_INPUT);
+            }
 
-		return bookMapValues.stream()
-                .map(book -> book.immutableStockBook())
-                .collect(Collectors.toList());
-	}
+            for (BookCopy bookCopy : bookCopiesSet) {
+                validate(bookCopy);
+            }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * com.acertainbookstore.interfaces.StockManager#updateEditorPicks(java.util
-	 * .Set)
-	 */
-	public void updateEditorPicks(Set<BookEditorPick> editorPicks) throws BookStoreException {
-		// Check that all ISBNs that we add/remove are there first.
-		if (editorPicks == null) {
-			throw new BookStoreException(BookStoreConstants.NULL_INPUT);
-		}
+            BookStoreBook book;
 
-		int isbnValue;
+            // Update the number of copies
+            for (BookCopy bookCopy : bookCopiesSet) {
+                isbn = bookCopy.getISBN();
+                numCopies = bookCopy.getNumCopies();
+                book = bookMap.get(isbn);
+                book.addCopies(numCopies);
+            }
+        } finally {
+            writeLock.unlock();
+        }
+    }
 
-		for (BookEditorPick editorPickArg : editorPicks) {
-			validate(editorPickArg);
-		}
+    /*
+     * (non-Javadoc)
+     *
+     * @see com.acertainbookstore.interfaces.StockManager#getBooks()
+     */
+    public List<StockBook> getBooks() {
+        readWriteLock.readLock().lock();
+        try {
+            Collection<BookStoreBook> bookMapValues = bookMap.values();
 
-		for (BookEditorPick editorPickArg : editorPicks) {
-			bookMap.get(editorPickArg.getISBN()).setEditorPick(editorPickArg.isEditorPick());
-		}
-	}
+            return bookMapValues.stream()
+                                .map(book -> book.immutableStockBook())
+                                .collect(Collectors.toList());
+        } finally {
+            readWriteLock.readLock().unlock();
+        }
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.acertainbookstore.interfaces.BookStore#buyBooks(java.util.Set)
-	 */
-	public void buyBooks(Set<BookCopy> bookCopiesToBuy) throws BookStoreException {
-		if (bookCopiesToBuy == null) {
-			throw new BookStoreException(BookStoreConstants.NULL_INPUT);
-		}
+    /*
+     * (non-Javadoc)
+     *
+     * @see
+     * com.acertainbookstore.interfaces.StockManager#updateEditorPicks(java.util
+     * .Set)
+     */
+    public void updateEditorPicks(Set<BookEditorPick> editorPicks) throws BookStoreException {
+        readWriteLock.writeLock().lock();
+        try {
+            // Check that all ISBNs that we add/remove are there first.
+            if (editorPicks == null) {
+                throw new BookStoreException(BookStoreConstants.NULL_INPUT);
+            }
 
-		// Check that all ISBNs that we buy are there first.
-		int isbn;
-		BookStoreBook book;
-		Boolean saleMiss = false;
+            int isbnValue;
 
-		Map<Integer, Integer> salesMisses = new HashMap<>();
+            for (BookEditorPick editorPickArg : editorPicks) {
+                validate(editorPickArg);
+            }
 
-		for (BookCopy bookCopyToBuy : bookCopiesToBuy) {
-			isbn = bookCopyToBuy.getISBN();
+            for (BookEditorPick editorPickArg : editorPicks) {
+                bookMap.get(editorPickArg.getISBN()).setEditorPick(editorPickArg.isEditorPick());
+            }
+        } finally {
+            readWriteLock.writeLock().unlock();
+        }
+    }
 
-			validate(bookCopyToBuy);
-			
-			book = bookMap.get(isbn);
+    /*
+     * (non-Javadoc)
+     *
+     * @see com.acertainbookstore.interfaces.BookStore#buyBooks(java.util.Set)
+     */
+    public void buyBooks(Set<BookCopy> bookCopiesToBuy) throws BookStoreException {
+        readWriteLock.writeLock().lock();
+        try {
+            if (bookCopiesToBuy == null) {
+                throw new BookStoreException(BookStoreConstants.NULL_INPUT);
+            }
 
-			if (!book.areCopiesInStore(bookCopyToBuy.getNumCopies())) {
-				// If we cannot sell the copies of the book, it is a miss.
-				salesMisses.put(isbn, bookCopyToBuy.getNumCopies() - book.getNumCopies());
-				saleMiss = true;
-			}
-		}
+            // Check that all ISBNs that we buy are there first.
+            int isbn;
+            BookStoreBook book;
+            Boolean saleMiss = false;
 
-		// We throw exception now since we want to see how many books in the
-		// order incurred misses which is used by books in demand
-		if (saleMiss) {
-			for (Map.Entry<Integer, Integer> saleMissEntry : salesMisses.entrySet()) {
-				book = bookMap.get(saleMissEntry.getKey());
-				book.addSaleMiss(saleMissEntry.getValue());
-			}
-			throw new BookStoreException(BookStoreConstants.BOOK + BookStoreConstants.NOT_AVAILABLE);
-		}
+            Map<Integer, Integer> salesMisses = new HashMap<>();
 
-		// Then make the purchase.
-		for (BookCopy bookCopyToBuy : bookCopiesToBuy) {
-			book = bookMap.get(bookCopyToBuy.getISBN());
-			book.buyCopies(bookCopyToBuy.getNumCopies());
-		}
-	}
+            for (BookCopy bookCopyToBuy : bookCopiesToBuy) {
+                isbn = bookCopyToBuy.getISBN();
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * com.acertainbookstore.interfaces.StockManager#getBooksByISBN(java.util.
-	 * Set)
-	 */
-	public List<StockBook> getBooksByISBN(Set<Integer> isbnSet) throws BookStoreException {
-		if (isbnSet == null) {
-			throw new BookStoreException(BookStoreConstants.NULL_INPUT);
-		}
+                validate(bookCopyToBuy);
 
-		for (Integer ISBN : isbnSet) {
-			validateISBNInStock(ISBN);
-		}
+                book = bookMap.get(isbn);
 
-		return isbnSet.stream()
-                .map(isbn -> bookMap.get(isbn).immutableStockBook())
-                .collect(Collectors.toList());
-	}
+                if (!book.areCopiesInStore(bookCopyToBuy.getNumCopies())) {
+                    // If we cannot sell the copies of the book, it is a miss.
+                    salesMisses.put(isbn, bookCopyToBuy.getNumCopies() - book.getNumCopies());
+                    saleMiss = true;
+                }
+            }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.acertainbookstore.interfaces.BookStore#getBooks(java.util.Set)
-	 */
-	public List<Book> getBooks(Set<Integer> isbnSet) throws BookStoreException {
-		if (isbnSet == null) {
-			throw new BookStoreException(BookStoreConstants.NULL_INPUT);
-		}
+            // We throw exception now since we want to see how many books in the
+            // order incurred misses which is used by books in demand
+            if (saleMiss) {
+                for (Map.Entry<Integer, Integer> saleMissEntry : salesMisses.entrySet()) {
+                    book = bookMap.get(saleMissEntry.getKey());
+                    book.addSaleMiss(saleMissEntry.getValue());
+                }
+                throw new BookStoreException(BookStoreConstants.BOOK + BookStoreConstants.NOT_AVAILABLE);
+            }
 
-		// Check that all ISBNs that we rate are there to start with.
-		for (Integer ISBN : isbnSet) {
-			validateISBNInStock(ISBN);
-		}
+            // Then make the purchase.
+            for (BookCopy bookCopyToBuy : bookCopiesToBuy) {
+                book = bookMap.get(bookCopyToBuy.getISBN());
+                book.buyCopies(bookCopyToBuy.getNumCopies());
+            }
+        } finally {
+            readWriteLock.writeLock().unlock();
+        }
+    }
 
-		return isbnSet.stream()
-                .map(isbn -> bookMap.get(isbn).immutableBook())
-                .collect(Collectors.toList());
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see
+     * com.acertainbookstore.interfaces.StockManager#getBooksByISBN(java.util.
+     * Set)
+     */
+    public List<StockBook> getBooksByISBN(Set<Integer> isbnSet) throws BookStoreException {
+        readWriteLock.readLock().lock();
+        try {
+            if (isbnSet == null) {
+                throw new BookStoreException(BookStoreConstants.NULL_INPUT);
+            }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.acertainbookstore.interfaces.BookStore#getEditorPicks(int)
-	 */
-	public List<Book> getEditorPicks(int numBooks) throws BookStoreException {
-		if (numBooks < 0) {
-			throw new BookStoreException("numBooks = " + numBooks + ", but it must be positive");
-		}
+            for (Integer ISBN : isbnSet) {
+                validateISBNInStock(ISBN);
+            }
 
-		List<BookStoreBook> listAllEditorPicks = bookMap.entrySet().stream()
-                .map(pair -> pair.getValue())
-				.filter(book -> book.isEditorPick())
-                .collect(Collectors.toList());
+            return isbnSet.stream()
+                          .map(isbn -> bookMap.get(isbn).immutableStockBook())
+                          .collect(Collectors.toList());
+        } finally {
+            readWriteLock.readLock().unlock();
+        }
+    }
 
-		// Find numBooks random indices of books that will be picked.
-		Random rand = new Random();
-		Set<Integer> tobePicked = new HashSet<>();
-		int rangePicks = listAllEditorPicks.size();
+    /*
+     * (non-Javadoc)
+     *
+     * @see com.acertainbookstore.interfaces.BookStore#getBooks(java.util.Set)
+     */
+    public List<Book> getBooks(Set<Integer> isbnSet) throws BookStoreException {
+        readWriteLock.readLock().lock();
+        try {
+            if (isbnSet == null) {
+                throw new BookStoreException(BookStoreConstants.NULL_INPUT);
+            }
 
-		if (rangePicks <= numBooks) {
+            // Check that all ISBNs that we rate are there to start with.
+            for (Integer ISBN : isbnSet) {
+                validateISBNInStock(ISBN);
+            }
 
-			// We need to add all books.
-			for (int i = 0; i < listAllEditorPicks.size(); i++) {
-				tobePicked.add(i);
-			}
-		} else {
+            return isbnSet.stream()
+                          .map(isbn -> bookMap.get(isbn).immutableBook())
+                          .collect(Collectors.toList());
+        } finally {
+            readWriteLock.readLock().unlock();
+        }
+    }
 
-			// We need to pick randomly the books that need to be returned.
-			int randNum;
+    /*
+     * (non-Javadoc)
+     *
+     * @see com.acertainbookstore.interfaces.BookStore#getEditorPicks(int)
+     */
+    public List<Book> getEditorPicks(int numBooks) throws BookStoreException {
+        readWriteLock.readLock().lock();
+        try {
+            if (numBooks < 0) {
+                throw new BookStoreException("numBooks = " + numBooks + ", but it must be positive");
+            }
 
-			while (tobePicked.size() < numBooks) {
-				randNum = rand.nextInt(rangePicks);
-				tobePicked.add(randNum);
-			}
-		}
+            List<BookStoreBook> listAllEditorPicks = bookMap.entrySet().stream()
+                                                            .map(pair -> pair.getValue())
+                                                            .filter(book -> book.isEditorPick())
+                                                            .collect(Collectors.toList());
 
-        // Return all the books by the randomly chosen indices.
-        return tobePicked.stream()
-                .map(index -> listAllEditorPicks.get(index).immutableBook())
-                .collect(Collectors.toList());
-	}
+            // Find numBooks random indices of books that will be picked.
+            Random rand = new Random();
+            Set<Integer> tobePicked = new HashSet<>();
+            int rangePicks = listAllEditorPicks.size();
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.acertainbookstore.interfaces.BookStore#getTopRatedBooks(int)
-	 */
-	@Override
-	public List<Book> getTopRatedBooks(int numBooks) throws BookStoreException {
-		throw new BookStoreException();
-	}
+            if (rangePicks <= numBooks) {
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.acertainbookstore.interfaces.StockManager#getBooksInDemand()
-	 */
-	@Override
-	public List<StockBook> getBooksInDemand() throws BookStoreException {
-		throw new BookStoreException();
-	}
+                // We need to add all books.
+                for (int i = 0; i < listAllEditorPicks.size(); i++) {
+                    tobePicked.add(i);
+                }
+            } else {
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.acertainbookstore.interfaces.BookStore#rateBooks(java.util.Set)
-	 */
-	@Override
-	public void rateBooks(Set<BookRating> bookRating) throws BookStoreException {
-		throw new BookStoreException();
-	}
+                // We need to pick randomly the books that need to be returned.
+                int randNum;
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.acertainbookstore.interfaces.StockManager#removeAllBooks()
-	 */
-	public void removeAllBooks() throws BookStoreException {
-		bookMap.clear();
-	}
+                while (tobePicked.size() < numBooks) {
+                    randNum = rand.nextInt(rangePicks);
+                    tobePicked.add(randNum);
+                }
+            }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * com.acertainbookstore.interfaces.StockManager#removeBooks(java.util.Set)
-	 */
-	public void removeBooks(Set<Integer> isbnSet) throws BookStoreException {
-		if (isbnSet == null) {
-			throw new BookStoreException(BookStoreConstants.NULL_INPUT);
-		}
+            // Return all the books by the randomly chosen indices.
+            return tobePicked.stream()
+                             .map(index -> listAllEditorPicks.get(index).immutableBook())
+                             .collect(Collectors.toList());
+        } finally {
+            readWriteLock.readLock().unlock();
+        }
+    }
 
-		for (Integer ISBN : isbnSet) {
-			if (BookStoreUtility.isInvalidISBN(ISBN)) {
-				throw new BookStoreException(BookStoreConstants.ISBN + ISBN + BookStoreConstants.INVALID);
-			}
+    /*
+     * (non-Javadoc)
+     *
+     * @see com.acertainbookstore.interfaces.BookStore#getTopRatedBooks(int)
+     */
+    @Override
+    public List<Book> getTopRatedBooks(int numBooks) throws BookStoreException {
+        throw new BookStoreException();
+    }
 
-			if (!bookMap.containsKey(ISBN)) {
-				throw new BookStoreException(BookStoreConstants.ISBN + ISBN + BookStoreConstants.NOT_AVAILABLE);
-			}
-		}
+    /*
+     * (non-Javadoc)
+     *
+     * @see com.acertainbookstore.interfaces.StockManager#getBooksInDemand()
+     */
+    @Override
+    public List<StockBook> getBooksInDemand() throws BookStoreException {
+        throw new BookStoreException();
+    }
 
-		for (int isbn : isbnSet) {
-			bookMap.remove(isbn);
-		}
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see com.acertainbookstore.interfaces.BookStore#rateBooks(java.util.Set)
+     */
+    @Override
+    public void rateBooks(Set<BookRating> bookRating) throws BookStoreException {
+        throw new BookStoreException();
+    }
+
+    /*
+     * (non-Javadoc)
+     *
+     * @see com.acertainbookstore.interfaces.StockManager#removeAllBooks()
+     */
+    public void removeAllBooks() throws BookStoreException {
+        readWriteLock.writeLock().lock();
+        try {
+            bookMap.clear();
+        } finally {
+            readWriteLock.writeLock().unlock();
+        }
+    }
+
+    /*
+     * (non-Javadoc)
+     *
+     * @see
+     * com.acertainbookstore.interfaces.StockManager#removeBooks(java.util.Set)
+     */
+    public void removeBooks(Set<Integer> isbnSet) throws BookStoreException {
+        readWriteLock.writeLock().lock();
+        try {
+            if (isbnSet == null) {
+                throw new BookStoreException(BookStoreConstants.NULL_INPUT);
+            }
+
+            for (Integer ISBN : isbnSet) {
+                if (BookStoreUtility.isInvalidISBN(ISBN)) {
+                    throw new BookStoreException(BookStoreConstants.ISBN + ISBN + BookStoreConstants.INVALID);
+                }
+
+                if (!bookMap.containsKey(ISBN)) {
+                    throw new BookStoreException(BookStoreConstants.ISBN + ISBN + BookStoreConstants.NOT_AVAILABLE);
+                }
+            }
+
+            for (int isbn : isbnSet) {
+                bookMap.remove(isbn);
+            }
+        } finally {
+            readWriteLock.writeLock().unlock();
+        }
+    }
 }

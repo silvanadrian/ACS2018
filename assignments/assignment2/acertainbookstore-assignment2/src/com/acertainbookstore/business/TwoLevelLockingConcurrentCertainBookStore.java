@@ -27,10 +27,10 @@ import com.acertainbookstore.utils.BookStoreUtility;
 public class TwoLevelLockingConcurrentCertainBookStore implements BookStore, StockManager {
 
 	/** The mapping of books from ISBN to {@link BookStoreBook}. */
-	private Map<Integer, BookStoreBook> bookMap = null;
+	private Map<Integer, BookStoreBook> bookMap;
 
 	/**
-	 * Instantiates a new {@link CertainBookStore}.
+	 * Instantiates a new {@link TwoLevelLockingConcurrentCertainBookStore}.
 	 */
 	public TwoLevelLockingConcurrentCertainBookStore() {
 		// Constructors are not synchronized
