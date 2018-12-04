@@ -49,7 +49,7 @@ Also in case any machine is shutdown, we would use a time out so that at least r
 
 \begin{minted}{text}
 write (address, value) {
-	k_address = lookup(address)
+	k_address = lookup(k_address)
 	try request(k_address)
 	catch exception
 		throw exception
