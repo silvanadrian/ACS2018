@@ -2,6 +2,14 @@
 \usepackage[english, science, large]{../template/ku-frontpage}
 \usepackage{tabularx}
 \usepackage{ltablex}
+\usepackage{minted}
+\setminted[text]{
+frame=lines,
+framesep=2mm,
+baselinestretch=1.1,
+fontsize=\footnotesize,
+linenos,
+breaklines}
 \hypersetup{
     colorlinks=false,
     pdfborder={0 0 0},
@@ -29,13 +37,44 @@ Yes, because it makes one optimized path for common requests, where it tries to 
 
 \section{Question 2: Fundamental Abstractions}
 \subsection{Question 2.1}
+We need some central machine which can translate an address from the single space address into the address for one of the $k$ machines.
+On this machine there would be a look up table present, in which we can look up any of the $k$ machine addresses.
+The performance for looking up such an address would be done by linear search which could end up very slow with a lot of machines.
 
+The biggest disadvantage is that there is a central lookup machine needed and in case that machine is not available, none of the machines will be reachable.
+Sure we could extend the amount of central machines (for example using proxies with caches).
+Also in case any machine is shutdown, we would use a time out so that at least request will be handled properly.
 
 \subsection{Question 2.2}
 
+\begin{minted}{text}
+write (address, value) {
+	k_address = lookup(address)
+	try request(k_address)
+	catch exception
+		throw exception
+}
+
+value <- read (address) {
+	k_address = lookup(address)
+	try request(k_address)
+	catch exception
+		throw exception
+}
+\end{minted}
+
+In both read and write we first have to lookup the address we need for sending the request to. We then try to send that request and in case any exception gets thrown we catch it and rethrow it again, so that clients are able to handle those exceptions.
+
 \subsection{Question 2.3}
+Yes in regular main memory READ/WRITE operations are atomic.
+In our design we do think atomicity is important and we rather what to handle it on the machines side then the client needing to implement additonial code for it.
+We can achieve atomicity with a locking mechanism, that would lock further READ requests if a WRITE request is running, for this we would also need to keep the lookup table consistent so that clients know which machine is locked momentarily and which not.
 
 \subsection{Question 2.4}
+No the memory locations will get unavailable, since we keep the address in the single address space and only handle it by timeout if a machine is not reachable (or even doesn't exist anymore).
+We could extend the lookup table with a possible flag of not existing machines, but the address would still live on in the table which could end up in a table which has many unused addresses in it.
+For that we would have to free up some spaces and move addresses back and forth then we would be able to also get rid of puttings too much unneeded data into the lookup table.
+
 
 \section{Question 3: Serializability \& Locking}
 
