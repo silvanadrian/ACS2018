@@ -368,20 +368,37 @@ public class BookStoreTest {
 	 */
 
 	public class buyBooksRunnable implements Runnable {
-		int iter;
-		Set<BookCopy> booksToBuy = new HashSet<BookCopy>();
+		Set<BookCopy> booksToBuy;
 
-		public buyBooksRunnable(int iter, Set<BookCopy> booksToBuy){
-			this.iter = iter;
+		public buyBooksRunnable(Set<BookCopy> booksToBuy){
 			this.booksToBuy = booksToBuy;
 		}
 
 		@Override
 		public void run(){
-			try{
-				for (int i = 0; i < iter; i++) {
-					client.buyBooks(booksToBuy);
-				}
+			try {
+				client.buyBooks(booksToBuy);
+			} catch (BookStoreException e) {
+				e.printStackTrace();
+			}
+
+		}
+	}
+
+	public class addCopiesRunnable implements Runnable {
+
+		Set<BookCopy> books;
+
+		public addCopiesRunnable(Set<BookCopy> bookCopiesSet) {
+			books = bookCopiesSet;
+		}
+
+		@Override
+		public void run() {
+			try {
+				storeManager.addCopies(books);
+			} catch (BookStoreException e) {
+				e.printStackTrace();
 			}
 		}
 	}
@@ -401,7 +418,7 @@ public class BookStoreTest {
 		addBooks(TEST_ISBN+1, NUM_COPIES);
 		addBooks(TEST_ISBN+2, NUM_COPIES);
 
-		Thread c1 = new Thread(new buyBooksRunnable(100, ))
+		//Thread c1 = new Thread(new buyBooksRunnable())
 
 	}
 
