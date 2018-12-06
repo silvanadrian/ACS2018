@@ -26,18 +26,25 @@ breaklines}
 \tableofcontents
 
 \section{Question 1}
-
 \subsection{(a)}
+We achieve before-or-after atomicity by either using shared or exclusive locks on the whole database. So that a read gets either the old or the new written data.
+In two level locking we set a global exclusive lock when inserting or deleting books and set a global shared lock otherwise. By this we achieve before-or-after atomicity on insertion and deletion. We also have local locks for each book (isbn). When we update a book we set an exclusive lock on this book and set shared lock otherwise. Hereby we make sure that only one client can update a book at a time and we achieve before-or-after atomicity.
 
 \subsection{(b)}
+We did several tests with concurrent threads. We bought books and added copies of books to ensure that we do not write on the same book at the same time. Also we checked for read problems, by reading while writing to a book and looking for differences there.
 
 \subsection{(c)}
+We did not feel the need to consider different testing strategies, because both classes are supposed to do the same thing. Different testing strategies would be a violation of modularity, because they provide the same semantics and we are interested in the output of the classes.
 
 \section{Question 2}
+For the SingleLockConcurrentCertainBookStore we have a version of Conservative Strict Two Phase Locking where we instead of having locks on data items have a lock on the entire database. The locking mechanism ensures that write operations from different threads occur sequentially. But we get concurrency improvements by having shared locks allowing read operations from multiple threads at the same time. By this we believe our locking in SingleLockConcurrentCertainBookStore is correct.
+For the TwoLevelLockingConcurrentCertainBookStore we use a version of Strict Two Phase Locking where we have local locks on each book. The books get locked during execution and all locks get released afterwards. In addition we have a global lock which ensures that inserts and deletions of books is sequential. Our locking protocol ensures sequential writes on single books and concurrent reads so we believe that our locking in TwoLevelLockingConcurrentCertainBookStore is correct.
 
 \section{Question 3}
 
 \section{Question 4}
+For the SingleLockConcurrentCertainBookStore there is the possible bottleneck of multiple clients wanting to write data, but all need to wait for each other due to the exclusive locks. The same problem can we get for TwoLevelLockingConcurrentCertainBookStore if all clients want to add new or delete books, because we have global exclusive locks on inserts and deletions. In Two Level Locking we do not have that big of an issue with scalability, because we can update multiple books at the same time. Something that is not possible in Single Lock.
+If all clients only want to read we could scale infinitely, but since most clients also want to write something Two Level Locking provides the best scalability. 
 
 \section{Question 5}
 
