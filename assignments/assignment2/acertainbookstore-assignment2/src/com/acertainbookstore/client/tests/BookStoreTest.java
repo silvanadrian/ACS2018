@@ -364,6 +364,48 @@ public class BookStoreTest {
 	}
 
 	/**
+	 * Buy books with runnable
+	 */
+
+	public class buyBooksRunnable implements Runnable {
+		int iter;
+		Set<BookCopy> booksToBuy = new HashSet<BookCopy>();
+
+		public buyBooksRunnable(int iter, Set<BookCopy> booksToBuy){
+			this.iter = iter;
+			this.booksToBuy = booksToBuy;
+		}
+
+		@Override
+		public void run(){
+			try{
+				for (int i = 0; i < iter; i++) {
+					client.buyBooks(booksToBuy);
+				}
+			}
+		}
+	}
+
+	/**
+	 * Test 1, Two threads, one buys books the other one add copies
+	 *
+	 * @throws BookStoreException
+	 * 				the book stor exception
+	 */
+	@Test
+	public void test1() throws BookStoreException {
+		//starting from scratch
+		storeManager.removeAllBooks();
+
+		addBooks(TEST_ISBN, NUM_COPIES);
+		addBooks(TEST_ISBN+1, NUM_COPIES);
+		addBooks(TEST_ISBN+2, NUM_COPIES);
+
+		Thread c1 = new Thread(new buyBooksRunnable(100, ))
+
+	}
+
+	/**
 	 * Tear down after class.
 	 *
 	 * @throws BookStoreException
