@@ -34,7 +34,7 @@ In two level locking we set a global exclusive lock when inserting or deleting b
 We did several tests with concurrent threads. We bought books and added copies of books to ensure that we do not write on the same book at the same time. Also we checked for read problems, by reading while writing to a book and looking for differences there.
 
 \subsection{(c)}
-We did not feel the need to consider different testing strategies, because both classes are supposed to do the same thing. Different testing strategies would be a violation of modularity, because they provide the same semantics and we are interested in the output of the classes.
+We did not feel the need to consider different testing strategies, because both classes are supposed to do the same thing. Different testing strategies would not be violation of modularity, but we can still consider it because different implementations can have different edge cases.
 
 \section{Question 2}
 For the SingleLockConcurrentCertainBookStore we have a version of Conservative Strict Two Phase Locking where we instead of having locks on data items have a lock on the entire database. The locking mechanism ensures that write operations from different threads occur sequentially. But we get concurrency improvements by having shared locks allowing read operations from multiple threads at the same time. By this we believe our locking in SingleLockConcurrentCertainBookStore is correct.
