@@ -1,7 +1,11 @@
 package com.acertainbookstore.client.tests;
 
+import static java.util.Collections.singletonList;
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -44,6 +48,8 @@ public class BookStoreTest {
 	/** Single lock test */
 	private static boolean singleLock = true;
 
+	/** Error for checking if snapshot is wrong */
+	private static boolean snapshotError = false;
 	
 	/** The store manager. */
 	private static StockManager storeManager;
@@ -371,9 +377,9 @@ public class BookStoreTest {
 		Set<BookCopy> books;
 		int numberOfOp;
 
-		buyBooksRunnable(int numbOfOp, Set<BookCopy> bookCoopies){
+		buyBooksRunnable(int numbOfOp, Set<BookCopy> bookCopies){
 			numberOfOp = numbOfOp;
-			books = bookCoopies;
+			books = bookCopies;
 		}
 
 		@Override
@@ -412,6 +418,57 @@ public class BookStoreTest {
 		}
 	}
 
+
+	public class buyAndReplenishRunnable implements Runnable {
+
+        Set<BookCopy> books;
+        int numberOfOp;
+
+        buyAndReplenishRunnable(int numbOfOp, Set<BookCopy> bookCopiesSet) {
+            numberOfOp = numbOfOp;
+            books = bookCopiesSet;
+
+        }
+
+        @Override
+        public void run() {
+            try {
+                for (int i = 0; i < numberOfOp; i++) {
+                    client.buyBooks(books);
+                    storeManager.addCopies(books);
+                }
+            } catch (BookStoreException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+	public class checkSnapshotCopiesRunnable implements Runnable {
+	    int numberOfOp;
+
+        checkSnapshotCopiesRunnable(int numbOfOp) {
+	        numberOfOp = numbOfOp;
+        }
+
+        @Override
+        public void run() {
+	        for (int i = 0; i < numberOfOp; i++) {
+	            List<StockBook> books = new ArrayList<>();
+                try {
+                    books = storeManager.getBooks();
+                } catch (BookStoreException e) {
+                    snapshotError = true;
+                    e.printStackTrace();
+                }
+                for (StockBook book : books) {
+                    if (!(book.getNumCopies() == NUM_COPIES || book.getNumCopies() == 0)) {
+                        snapshotError = true;
+                    }
+                }
+            }
+        }
+    }
+
 	/**
 	 * Test 1, Two threads, one buys books the other one add copies
 	 *
@@ -419,19 +476,19 @@ public class BookStoreTest {
 	 * 				the book stor exception
 	 */
 	@Test
-	public void test1() throws BookStoreException {
+	public void ass2Test1() throws BookStoreException {
 		//starting from scratch
 		storeManager.removeAllBooks();
 
-		addBooks(TEST_ISBN, NUM_COPIES);
-		addBooks(TEST_ISBN+1,NUM_COPIES+1);
-		addBooks(TEST_ISBN+2,NUM_COPIES+2);
+		addBooks(TEST_ISBN, NUM_COPIES*100);
+		addBooks(TEST_ISBN+1,NUM_COPIES*100);
+		addBooks(TEST_ISBN+2,NUM_COPIES*100);
 
 		// buy 5 books so that numOfCopies = 0
 		Set<BookCopy> booksToBuyAndReplenish = new HashSet<>();
 		booksToBuyAndReplenish.add(new BookCopy(TEST_ISBN,NUM_COPIES));
-		booksToBuyAndReplenish.add(new BookCopy(TEST_ISBN+1, NUM_COPIES+1));
-		booksToBuyAndReplenish.add(new BookCopy(TEST_ISBN+2, NUM_COPIES+2));
+		booksToBuyAndReplenish.add(new BookCopy(TEST_ISBN+1, NUM_COPIES));
+		booksToBuyAndReplenish.add(new BookCopy(TEST_ISBN+2, NUM_COPIES));
 
 		Thread c1 = new Thread(new buyBooksRunnable(42,booksToBuyAndReplenish));
 		Thread c2 = new Thread(new addCopiesRunnable(42,booksToBuyAndReplenish));
@@ -447,12 +504,116 @@ public class BookStoreTest {
 			e.printStackTrace();
 		}
 
-		// Same number of copies after buying and addding copies
-		//assertEquals(NUM_COPIES,storeManager.getBooks().get(0).getNumCopies());
-		assertEquals(NUM_COPIES+1,storeManager.getBooks().get(1).getNumCopies());
-		assertEquals(NUM_COPIES+2,storeManager.getBooks().get(2).getNumCopies());
-
+        assertEquals(500, storeManager.getBooksByISBN(new HashSet<>(singletonList(TEST_ISBN))).get(0).getNumCopies());
+        assertEquals(500, storeManager.getBooksByISBN(new HashSet<>(singletonList(TEST_ISBN + 1))).get(0).getNumCopies());
+        assertEquals(500, storeManager.getBooksByISBN(new HashSet<>(singletonList(TEST_ISBN + 2))).get(0).getNumCopies());
 	}
+
+	@Test
+    public void ass2Test2() throws BookStoreException {
+        //starting from scratch
+        storeManager.removeAllBooks();
+
+        addBooks(TEST_ISBN, NUM_COPIES);
+        addBooks(TEST_ISBN+1,NUM_COPIES);
+        addBooks(TEST_ISBN+2,NUM_COPIES);
+
+        // buy 5 books so that numOfCopies = 0
+        Set<BookCopy> booksToBuyAndReplenish = new HashSet<>();
+        booksToBuyAndReplenish.add(new BookCopy(TEST_ISBN,NUM_COPIES));
+        booksToBuyAndReplenish.add(new BookCopy(TEST_ISBN+1, NUM_COPIES));
+        booksToBuyAndReplenish.add(new BookCopy(TEST_ISBN+2, NUM_COPIES));
+
+
+        Thread c1 = new Thread(new buyAndReplenishRunnable(42,booksToBuyAndReplenish));
+        Thread c2 = new Thread(new checkSnapshotCopiesRunnable(42));
+
+        c1.start();
+        c2.start();
+
+        try {
+            c1.join();
+            c2.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        assertFalse(snapshotError);
+
+    }
+
+    @Test
+    public void ass2Test3() throws BookStoreException {
+        //starting from scratch
+        storeManager.removeAllBooks();
+
+        addBooks(TEST_ISBN, NUM_COPIES);
+        addBooks(TEST_ISBN+1,NUM_COPIES);
+        addBooks(TEST_ISBN+2,NUM_COPIES);
+
+        // buy 5 books so that numOfCopies = 0
+        Set<BookCopy> booksToBuyAndReplenish = new HashSet<>();
+        booksToBuyAndReplenish.add(new BookCopy(TEST_ISBN,NUM_COPIES));
+        booksToBuyAndReplenish.add(new BookCopy(TEST_ISBN+1, NUM_COPIES));
+        booksToBuyAndReplenish.add(new BookCopy(TEST_ISBN+2, NUM_COPIES));
+
+        Thread c1 = new Thread(new addCopiesRunnable(42,booksToBuyAndReplenish));
+        Thread c2 = new Thread(new addCopiesRunnable(42,booksToBuyAndReplenish));
+
+        c1.start();
+        c2.start();
+
+
+        try {
+            c1.join();
+            c2.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+
+        int amountOfCopies = 2*42*5+5;
+        assertEquals(amountOfCopies, storeManager.getBooksByISBN(new HashSet<>(singletonList(TEST_ISBN))).get(0).getNumCopies());
+        assertEquals(amountOfCopies, storeManager.getBooksByISBN(new HashSet<>(singletonList(TEST_ISBN + 1))).get(0).getNumCopies());
+        assertEquals(amountOfCopies, storeManager.getBooksByISBN(new HashSet<>(singletonList(TEST_ISBN + 2))).get(0).getNumCopies());
+    }
+
+    @Test
+    public void ass2Test4() throws BookStoreException {
+        //starting from scratch
+        storeManager.removeAllBooks();
+
+        addBooks(TEST_ISBN, NUM_COPIES);
+        addBooks(TEST_ISBN+1,NUM_COPIES);
+        addBooks(TEST_ISBN+2,NUM_COPIES);
+
+        // buy 5 books so that numOfCopies = 0
+        Set<BookCopy> booksToBuyAndReplenish = new HashSet<>();
+        booksToBuyAndReplenish.add(new BookCopy(TEST_ISBN,NUM_COPIES));
+        booksToBuyAndReplenish.add(new BookCopy(TEST_ISBN+1, NUM_COPIES));
+        booksToBuyAndReplenish.add(new BookCopy(TEST_ISBN+2, NUM_COPIES));
+
+        Thread c1 = new Thread(new buyAndReplenishRunnable(42,booksToBuyAndReplenish));
+        Thread c2 = new Thread(new addCopiesRunnable(42,booksToBuyAndReplenish));
+
+        c1.start();
+        c2.start();
+
+
+        try {
+            c1.join();
+            c2.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+
+        int amountOfCopies = 42*5+5;
+        assertEquals(amountOfCopies, storeManager.getBooksByISBN(new HashSet<>(singletonList(TEST_ISBN))).get(0).getNumCopies());
+        assertEquals(amountOfCopies, storeManager.getBooksByISBN(new HashSet<>(singletonList(TEST_ISBN + 1))).get(0).getNumCopies());
+        assertEquals(amountOfCopies, storeManager.getBooksByISBN(new HashSet<>(singletonList(TEST_ISBN + 2))).get(0).getNumCopies());
+    }
+
 
 	/**
 	 * Tear down after class.
