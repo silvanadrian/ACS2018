@@ -368,16 +368,20 @@ public class BookStoreTest {
 	 */
 
 	public class buyBooksRunnable implements Runnable {
-		Set<BookCopy> booksToBuy;
+		Set<BookCopy> books;
+		int numberOfOp;
 
-		public buyBooksRunnable(Set<BookCopy> booksToBuy){
-			this.booksToBuy = booksToBuy;
+		buyBooksRunnable(int numbOfOp, Set<BookCopy> bookCoopies){
+			numberOfOp = numbOfOp;
+			books = bookCoopies;
 		}
 
 		@Override
 		public void run(){
 			try {
-				client.buyBooks(booksToBuy);
+			    for (int i = 0; i < numberOfOp; i++) {
+                    client.buyBooks(books);
+                }
 			} catch (BookStoreException e) {
 				e.printStackTrace();
 			}
@@ -388,15 +392,20 @@ public class BookStoreTest {
 	public class addCopiesRunnable implements Runnable {
 
 		Set<BookCopy> books;
+		int numberOfOp;
 
-		public addCopiesRunnable(Set<BookCopy> bookCopiesSet) {
+		addCopiesRunnable(int numbOfOp, Set<BookCopy> bookCopiesSet) {
+			numberOfOp = numbOfOp;
 			books = bookCopiesSet;
+
 		}
 
 		@Override
 		public void run() {
 			try {
-				storeManager.addCopies(books);
+				for (int i = 0; i < numberOfOp; i++) {
+					storeManager.addCopies(books);
+				}
 			} catch (BookStoreException e) {
 				e.printStackTrace();
 			}
@@ -415,10 +424,33 @@ public class BookStoreTest {
 		storeManager.removeAllBooks();
 
 		addBooks(TEST_ISBN, NUM_COPIES);
-		addBooks(TEST_ISBN+1, NUM_COPIES);
-		addBooks(TEST_ISBN+2, NUM_COPIES);
+		addBooks(TEST_ISBN+1,NUM_COPIES+1);
+		addBooks(TEST_ISBN+2,NUM_COPIES+2);
 
-		//Thread c1 = new Thread(new buyBooksRunnable())
+		// buy 5 books so that numOfCopies = 0
+		Set<BookCopy> booksToBuyAndReplenish = new HashSet<>();
+		booksToBuyAndReplenish.add(new BookCopy(TEST_ISBN,NUM_COPIES));
+		booksToBuyAndReplenish.add(new BookCopy(TEST_ISBN+1, NUM_COPIES+1));
+		booksToBuyAndReplenish.add(new BookCopy(TEST_ISBN+2, NUM_COPIES+2));
+
+		Thread c1 = new Thread(new buyBooksRunnable(42,booksToBuyAndReplenish));
+		Thread c2 = new Thread(new addCopiesRunnable(42,booksToBuyAndReplenish));
+
+		c1.start();
+		c2.start();
+
+
+		try {
+			c1.join();
+			c2.join();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		// Same number of copies after buying and addding copies
+		//assertEquals(NUM_COPIES,storeManager.getBooks().get(0).getNumCopies());
+		assertEquals(NUM_COPIES+1,storeManager.getBooks().get(1).getNumCopies());
+		assertEquals(NUM_COPIES+2,storeManager.getBooks().get(2).getNumCopies());
 
 	}
 
