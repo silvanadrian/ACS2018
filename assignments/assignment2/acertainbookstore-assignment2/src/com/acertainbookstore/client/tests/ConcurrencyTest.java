@@ -73,7 +73,7 @@ public class ConcurrencyTest {
     private static class client2 implements Runnable {
         @Override
         public void run() {
-            
+
         }
     }
 }
