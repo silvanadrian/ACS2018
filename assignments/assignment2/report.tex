@@ -41,12 +41,19 @@ For the SingleLockConcurrentCertainBookStore we have a version of Conservative S
 For the TwoLevelLockingConcurrentCertainBookStore we use a version of Strict Two Phase Locking where we have local locks on each book. The books get locked during execution and all locks get released afterwards. In addition we have a global lock which ensures that inserts and deletions of books is sequential. Our locking protocol ensures sequential writes on single books and concurrent reads so we believe that our locking in TwoLevelLockingConcurrentCertainBookStore is correct.
 
 \section{Question 3}
+With \texttt{SingleLockConcurrentCertainBookStore} there won't be any deadlocks since we ensured writes are sequential (exclusive lock on Database) while reads can obtain a shared lock.
+For \texttt{TwoLevelLockingConcurrentCertainBookStore} we can experience deadlocks.
+With the local exclusive locks we might end up in a situation that threads wait on each other indefinitely, which would result in a deadlock.
+
 
 \section{Question 4}
 For the SingleLockConcurrentCertainBookStore there is the possible bottleneck of multiple clients wanting to write data, but all need to wait for each other due to the exclusive locks. The same problem can we get for TwoLevelLockingConcurrentCertainBookStore if all clients want to add new or delete books, because we have global exclusive locks on inserts and deletions. In Two Level Locking we do not have that big of an issue with scalability, because we can update multiple books at the same time. Something that is not possible in Single Lock.
 If all clients only want to read we could scale infinitely, but since most clients also want to write something Two Level Locking provides the best scalability. 
 
 \section{Question 5}
-
+In \texttt{SingleLockConcurrentCertainBookStore} the concurrency is limited by the number of write operations, since those need an exclusive lock on the whole Database which puts all other operations on wait.
+If there are not too many write operations in comparison to read operation on the bookstore then the overhead would be more or less small which would be a good tradeoff.
+For \texttt{TwoLevelLockingConcurrentCertainBookStore} we do have a bigger overhead since our local locks have to be saved in a map, so we have to get the lock always out of the map.
+But the reach a higher concurrency (local write locks don't lock the whole database), which helps us in processing lots of requests in comparison to \texttt{SingleLockConcurrentCertainBookStore}
 
 \end{document}}
