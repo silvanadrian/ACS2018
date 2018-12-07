@@ -21,9 +21,11 @@ import java.util.stream.IntStream;
 public class BookSetGenerator {
 
     private static Integer ISBN = 1;
+    private Faker faker;
 
 	public BookSetGenerator() {
 		// TODO Auto-generated constructor stub
+        faker = new Faker();
 	}
 
 	/**
@@ -51,7 +53,6 @@ public class BookSetGenerator {
 	}
 
     private ImmutableStockBook createRandomBook() {
-        Faker faker = new Faker();
 	    final String title = faker.book().title();
 	    final String author = faker.book().author();
         float price = 5.0f;
