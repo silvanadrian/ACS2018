@@ -22,10 +22,12 @@ public class BookSetGenerator {
 
     private static Integer ISBN = 1;
     private Faker faker;
+    private Random random;
 
 	public BookSetGenerator() {
 		// TODO Auto-generated constructor stub
         faker = new Faker();
+        random = new Random();
 	}
 
 	/**
@@ -55,14 +57,14 @@ public class BookSetGenerator {
     private ImmutableStockBook createRandomBook() {
 	    final String title = faker.book().title();
 	    final String author = faker.book().author();
-        float price = 5.0f;
-        int copies = 5;
-        long misses = 1L;
-        long rated = 1L;
-        long rating = 1L;
-        boolean editorPick = false;
+        float price = random.nextFloat() * (300f - 5f) + 5f;
+        int numCopies = random.ints(1,0,9999).findAny().getAsInt();
+        long numSaleMisses = random.longs(1,0L,1000L).findAny().getAsLong();
+        long numTimesRated = random.longs(1, 0L, 1000L).findAny().getAsLong();
+        long totalRating = random.longs(1,0L,5L).findAny().getAsLong();
+        boolean editorPick = random.nextBoolean();
 
-        return new ImmutableStockBook(getISBN(),title,author, price, copies,misses,rated,rating,editorPick);
+        return new ImmutableStockBook(getISBN(),title,author, price, numCopies,numSaleMisses,numTimesRated,totalRating,editorPick);
     }
 
     private Integer getISBN() {
