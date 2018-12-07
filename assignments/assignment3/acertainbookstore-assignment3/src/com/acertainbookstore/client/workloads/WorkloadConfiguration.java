@@ -10,6 +10,7 @@ import com.acertainbookstore.interfaces.StockManager;
  * 
  */
 public class WorkloadConfiguration {
+	private static final boolean RANDOM_ISBN = true;
 	private int numBooksToBuy = 5;
 	private int numBookCopiesToBuy = 1;
 	private int numEditorPicksToGet = 10;
@@ -26,7 +27,7 @@ public class WorkloadConfiguration {
 
 	public WorkloadConfiguration(BookStore bookStore, StockManager stockManager) throws Exception {
 		// Create a new one so that it is not shared
-		bookSetGenerator = new BookSetGenerator(true);
+		bookSetGenerator = new BookSetGenerator(RANDOM_ISBN);
 		this.bookStore = bookStore;
 		this.stockManager = stockManager;
 	}
