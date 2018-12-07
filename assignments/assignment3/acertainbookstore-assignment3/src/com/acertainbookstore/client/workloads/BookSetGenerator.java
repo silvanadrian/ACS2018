@@ -25,7 +25,6 @@ public class BookSetGenerator {
     private Random random;
 
 	public BookSetGenerator() {
-		// TODO Auto-generated constructor stub
         faker = new Faker();
         random = new Random();
 	}

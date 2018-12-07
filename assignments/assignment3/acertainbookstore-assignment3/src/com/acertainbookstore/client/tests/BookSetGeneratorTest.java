@@ -1,9 +1,8 @@
 package com.acertainbookstore.client.tests;
 
-import com.acertainbookstore.business.Book;
 import com.acertainbookstore.business.StockBook;
 import com.acertainbookstore.client.workloads.BookSetGenerator;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.Set;
@@ -16,7 +15,7 @@ public class BookSetGeneratorTest {
 
     private BookSetGenerator bookSetGenerator;
 
-    @Before
+    @BeforeClass
     public void setUp() {
         bookSetGenerator = new BookSetGenerator();
     }
