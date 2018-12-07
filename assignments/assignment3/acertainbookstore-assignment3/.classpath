@@ -38,5 +38,9 @@
 	<classpathentry kind="lib" path="lib/jetty-all-9.4.11.v20180605-uber.jar"/>
 	<classpathentry kind="lib" path="lib/kryo-4.0.2.jar"/>
 	<classpathentry kind="lib" path="lib/xstream-1.4.10.jar"/>
+	<classpathentry kind="lib" path="lib/commons-lang3-3.5.jar"/>
+	<classpathentry kind="lib" path="lib/generex-1.0.2.jar"/>
+	<classpathentry kind="lib" path="lib/javafaker-0.16.jar"/>
+	<classpathentry kind="lib" path="lib/snakeyaml-1.20.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
