@@ -93,7 +93,39 @@ public class CertainWorkload {
 	 * @param workerRunResults
 	 */
 	public static void reportMetric(List<WorkerRunResult> workerRunResults) {
-		// TODO: You should aggregate metrics and output them for plotting here
+
+    int successfulInteractions = 0;
+    long elapsedTimeInNanoSecs = 0;
+    int totalRuns = 0;
+    int successfulFrequentBookStoreInteractionRuns = 0;
+    int totalFrequentBookStoreInteractionRuns = 0;
+
+    double aggregatedThroughput = 0;
+    double averageLatency = 0;
+    double throughPut;
+
+    for (WorkerRunResult workerRunResult : workerRunResults) {
+      successfulInteractions += workerRunResult.getSuccessfulInteractions();
+      totalRuns += workerRunResult.getTotalRuns();
+      elapsedTimeInNanoSecs += workerRunResult.getElapsedTimeInNanoSecs();
+      successfulFrequentBookStoreInteractionRuns += workerRunResult.getSuccessfulFrequentBookStoreInteractionRuns();
+      totalFrequentBookStoreInteractionRuns += workerRunResult.getTotalFrequentBookStoreInteractionRuns();
+
+      throughPut = workerRunResult.getSuccessfulFrequentBookStoreInteractionRuns() / (double) workerRunResult.getElapsedTimeInNanoSecs();
+      aggregatedThroughput += throughPut;
+      averageLatency += 1f / throughPut;
+    }
+
+    System.out.println("Successful Interactions: " + successfulInteractions);
+    System.out.println("Successful Frequent Bookstore Interaction Runs: " + successfulFrequentBookStoreInteractionRuns);
+
+    System.out.println("Total runs: " + totalRuns);
+    System.out.println("Total Frequent Bookstore Interaction Runs: " + totalFrequentBookStoreInteractionRuns);
+
+    System.out.println("Elapsed Time: " + elapsedTimeInNanoSecs + "ns");
+
+    System.out.println("Aggregated Throughput: " + aggregatedThroughput);
+    System.out.println("Average Latency: " + averageLatency);
 	}
 
 	/**
