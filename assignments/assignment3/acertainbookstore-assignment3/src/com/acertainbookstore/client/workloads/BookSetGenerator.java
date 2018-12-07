@@ -1,8 +1,13 @@
 package com.acertainbookstore.client.workloads;
 
-import java.util.Set;
-
 import com.acertainbookstore.business.StockBook;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Helper class to generate stockbooks and isbns modelled similar to Random
@@ -21,7 +26,9 @@ public class BookSetGenerator {
 	 * @return
 	 */
 	public Set<Integer> sampleFromSetOfISBNs(Set<Integer> isbns, int num) {
-		return null;
+	    final List<Integer> temp = new ArrayList<>(isbns);
+		Collections.shuffle(temp, new Random());
+		return temp.stream().limit(num).collect(Collectors.toSet());
 	}
 
 	/**
