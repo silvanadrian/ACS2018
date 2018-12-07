@@ -17,7 +17,7 @@ public class BookSetGeneratorTest {
 
     @BeforeClass
     public void setUp() {
-        bookSetGenerator = new BookSetGenerator();
+        bookSetGenerator = new BookSetGenerator(true);
     }
 
     @Test

@@ -3,10 +3,17 @@
  */
 package com.acertainbookstore.client.workloads;
 
-import java.util.Random;
-import java.util.concurrent.Callable;
-
+import com.acertainbookstore.business.Book;
+import com.acertainbookstore.business.StockBook;
+import com.acertainbookstore.interfaces.StockManager;
 import com.acertainbookstore.utils.BookStoreException;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 /**
  * 
@@ -98,7 +105,18 @@ public class Worker implements Callable<WorkerRunResult> {
      * @throws BookStoreException
      */
     private void runRareStockManagerInteraction() throws BookStoreException {
-	// TODO: Add code for New Stock Acquisition Interaction
+		StockManager stockManager = configuration.getStockManager();
+        BookSetGenerator bookSetGenerator = configuration.getBookSetGenerator();
+
+        List<StockBook> stockBookList = stockManager.getBooks();
+
+        List<StockBook> bookList = new ArrayList<>(bookSetGenerator.nextSetOfStockBooks(configuration.getNumBooksToAdd()));
+
+        final List<Integer> isbns = stockBookList.stream().map(Book::getISBN).collect(Collectors.toList());
+
+        final Set<StockBook> booksMissing = bookList.stream().filter(book -> !isbns.contains(book.getISBN())).collect(Collectors.toSet());
+
+        stockManager.addBooks(booksMissing);
     }
 
     /**

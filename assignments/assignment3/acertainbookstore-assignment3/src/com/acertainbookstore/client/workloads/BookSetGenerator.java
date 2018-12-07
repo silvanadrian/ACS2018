@@ -1,6 +1,5 @@
 package com.acertainbookstore.client.workloads;
 
-import com.acertainbookstore.business.Book;
 import com.acertainbookstore.business.ImmutableStockBook;
 import com.acertainbookstore.business.StockBook;
 import com.github.javafaker.Faker;
@@ -23,10 +22,12 @@ public class BookSetGenerator {
     private static Integer ISBN = 1;
     private Faker faker;
     private Random random;
+    private boolean randomISBN;
 
-	public BookSetGenerator() {
-        faker = new Faker();
-        random = new Random();
+	public BookSetGenerator(boolean randomISBN) {
+        this.faker = new Faker();
+        this.random = new Random();
+        this.randomISBN = randomISBN;
 	}
 
 	/**
@@ -45,7 +46,7 @@ public class BookSetGenerator {
 	 * Return num stock books. For now return an ImmutableStockBook
 	 * 
 	 * @param num
-	 * @return
+     * @return
 	 */
 	public Set<StockBook> nextSetOfStockBooks(int num) {
 	    Set<StockBook> result = new HashSet<>();
@@ -54,20 +55,25 @@ public class BookSetGenerator {
 	}
 
     private ImmutableStockBook createRandomBook() {
+	    final int isbn = randomISBN ? getISBNRand() : getISBN();
 	    final String title = faker.book().title();
 	    final String author = faker.book().author();
         float price = random.nextFloat() * (300f - 5f) + 5f;
-        int numCopies = random.ints(1,0,9999).findAny().getAsInt();
+        int numCopies = random.ints(1,1,9999).findAny().getAsInt();
         long numSaleMisses = random.longs(1,0L,1000L).findAny().getAsLong();
         long numTimesRated = random.longs(1, 0L, 1000L).findAny().getAsLong();
         long totalRating = random.longs(1,0L,5L).findAny().getAsLong();
         boolean editorPick = random.nextBoolean();
 
-        return new ImmutableStockBook(getISBN(),title,author, price, numCopies,numSaleMisses,numTimesRated,totalRating,editorPick);
+        return new ImmutableStockBook(isbn, title, author, price, numCopies, numSaleMisses, numTimesRated, totalRating, editorPick);
     }
 
     private Integer getISBN() {
-	    return ISBN++;
+        return ISBN++;
+    }
+
+    private Integer getISBNRand() {
+	    return random.ints(1,1,2000).findAny().getAsInt();
     }
 
 }

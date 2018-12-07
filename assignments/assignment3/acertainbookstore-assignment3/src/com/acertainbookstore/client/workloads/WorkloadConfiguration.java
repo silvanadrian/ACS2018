@@ -26,7 +26,7 @@ public class WorkloadConfiguration {
 
 	public WorkloadConfiguration(BookStore bookStore, StockManager stockManager) throws Exception {
 		// Create a new one so that it is not shared
-		bookSetGenerator = new BookSetGenerator();
+		bookSetGenerator = new BookSetGenerator(true);
 		this.bookStore = bookStore;
 		this.stockManager = stockManager;
 	}

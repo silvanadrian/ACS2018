@@ -105,7 +105,7 @@ public class CertainWorkload {
 	public static void initializeBookStoreData(StockManager stockManager) throws BookStoreException {
 
         // use the BookSet generator for generating random books (1000)
-		BookSetGenerator bookSetGenerator = new BookSetGenerator();
+		BookSetGenerator bookSetGenerator = new BookSetGenerator(false);
 		Set<StockBook> stockBookSet = bookSetGenerator.nextSetOfStockBooks(1000);
 
 		//remove all books before, to be sure only the generated books are included
