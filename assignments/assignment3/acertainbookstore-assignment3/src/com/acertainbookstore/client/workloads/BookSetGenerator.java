@@ -73,7 +73,7 @@ public class BookSetGenerator {
     }
 
     private Integer getISBNRand() {
-	    return random.ints(1,1,2000).findAny().getAsInt();
+	    return random.ints(1,1,15000).findAny().getAsInt();
     }
 
 }

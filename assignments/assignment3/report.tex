@@ -26,8 +26,18 @@ breaklines}
 \tableofcontents
 
 \section{Setup}
+For data generation we used as much as randomization as possible, we even used a data faker (\texttt{java-faker}) for test data which makes more sense and not just some random strings for author and title (no specific length).
+The other attributes we filled by the \texttt{Radnom} class which allowed us to generate some useful test data for floats, doubles etc.
+Overall we generate 1000 books for the database which have ISBNs from 1 to 1000, while for the interactions we used random ISBNs from (1 to 2000) so that there will be sometimes overlapping books (already existing in the database) and otherwise still have to be added to the database.
+To be able to distinguish between random and not random ISBNs we had to add a parameter to \texttt{BookSetGenerator} which allows us to configure it as wanted.
+
+We ran the experiments on a single machine with Mac OSX, 16 GB of RAM and an Intel Core i5 with 2 Cores (4 threads).
+
+For measurements we changed the amount of concurrent clients to be able to plot some sort of statistics which wouldn't be possible with single client runs.
 
 \section{Throughput and Latency plots}
+
+
 
 \section{Reliability}
 
