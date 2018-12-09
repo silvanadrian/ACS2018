@@ -42,5 +42,7 @@
 	<classpathentry kind="lib" path="lib/generex-1.0.2.jar"/>
 	<classpathentry kind="lib" path="lib/javafaker-0.16.jar"/>
 	<classpathentry kind="lib" path="lib/snakeyaml-1.20.jar"/>
+		<classpathentry kind="lib" path="lib/VectorGraphics2D-0.13.jar"/>
+  	<classpathentry kind="lib" path="lib/xchart-3.5.2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

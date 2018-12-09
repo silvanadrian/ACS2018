@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package com.acertainbookstore.client.workloads;
 
@@ -9,138 +9,165 @@ import com.acertainbookstore.client.BookStoreHTTPProxy;
 import com.acertainbookstore.client.StockManagerHTTPProxy;
 import com.acertainbookstore.interfaces.BookStore;
 import com.acertainbookstore.interfaces.StockManager;
-import com.acertainbookstore.utils.BookStoreConstants;
 import com.acertainbookstore.utils.BookStoreException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.stream.IntStream;
+import org.knowm.xchart.BitmapEncoder;
+import org.knowm.xchart.BitmapEncoder.BitmapFormat;
+import org.knowm.xchart.SwingWrapper;
+import org.knowm.xchart.XYChart;
 
 /**
- * 
- * CertainWorkload class runs the workloads by different workers concurrently.
- * It configures the environment for the workers using WorkloadConfiguration
- * objects and reports the metrics
- * 
+ * CertainWorkload class runs the workloads by different workers concurrently. It configures the
+ * environment for the workers using WorkloadConfiguration objects and reports the metrics
  */
 public class CertainWorkload {
 
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) throws Exception {
-		int numConcurrentWorkloadThreads = 10;
-		String serverAddress = "http://localhost:8081";
-		boolean localTest = true;
-		List<WorkerRunResult> workerRunResults = new ArrayList<WorkerRunResult>();
-		List<Future<WorkerRunResult>> runResults = new ArrayList<Future<WorkerRunResult>>();
+  private static int numConcurrentWorkloadThreads;
 
-		// Initialize the RPC interfaces if its not a localTest, the variable is
-		// overriden if the property is set
-		String localTestProperty = System
-				.getProperty(BookStoreConstants.PROPERTY_KEY_LOCAL_TEST);
-		localTest = (localTestProperty != null) ? Boolean
-				.parseBoolean(localTestProperty) : localTest;
+  /**
+   * @param args
+   */
+  public static void main(String[] args) throws Exception {
+    numConcurrentWorkloadThreads = 10;
+    String serverAddress = "http://localhost:8081";
 
-		BookStore bookStore = null;
-		StockManager stockManager = null;
-		if (localTest) {
-			CertainBookStore store = new CertainBookStore();
-			bookStore = store;
-			stockManager = store;
-		} else {
-			stockManager = new StockManagerHTTPProxy(serverAddress + "/stock");
-			bookStore = new BookStoreHTTPProxy(serverAddress);
-		}
+    CertainBookStore store = new CertainBookStore();
 
-		// Generate data in the bookstore before running the workload
-		initializeBookStoreData(stockManager);
+    List<List<WorkerRunResult>> localResults = runWorkers(store, store);
 
-		ExecutorService exec = Executors
-				.newFixedThreadPool(numConcurrentWorkloadThreads);
+    StockManagerHTTPProxy stockManager = new StockManagerHTTPProxy(serverAddress + "/stock");
+    BookStoreHTTPProxy bookStore = new BookStoreHTTPProxy(serverAddress);
+    List<List<WorkerRunResult>> rpcResults = runWorkers(bookStore, stockManager);
 
-		for (int i = 0; i < numConcurrentWorkloadThreads; i++) {
-			WorkloadConfiguration config = new WorkloadConfiguration(bookStore,
-					stockManager);
-			Worker workerTask = new Worker(config);
-			// Keep the futures to wait for the result from the thread
-			runResults.add(exec.submit(workerTask));
-		}
+    // Finished initialization, stop the clients if not localTest
+    bookStore.stop();
+    stockManager.stop();
 
-		// Get the results from the threads using the futures returned
-		for (Future<WorkerRunResult> futureRunResult : runResults) {
-			WorkerRunResult runResult = futureRunResult.get(); // blocking call
-			workerRunResults.add(runResult);
-		}
+    reportMetric(localResults, rpcResults);
+  }
 
-		exec.shutdownNow(); // shutdown the executor
+  private static List<List<WorkerRunResult>> runWorkers(BookStore bookstore,
+      StockManager stockmanager)
+      throws Exception {
+    List<List<WorkerRunResult>> totalWorkersRunResults = new ArrayList<>();
 
-		// Finished initialization, stop the clients if not localTest
-		if (!localTest) {
-			((BookStoreHTTPProxy) bookStore).stop();
-			((StockManagerHTTPProxy) stockManager).stop();
-		}
+    // Generate data in the bookstore before running the workload
+    initializeBookStoreData(stockmanager);
 
-		reportMetric(workerRunResults);
-	}
+    ExecutorService exec = Executors.newFixedThreadPool(numConcurrentWorkloadThreads);
 
-	/**
-	 * Computes the metrics and prints them
-	 * 
-	 * @param workerRunResults
-	 */
-	public static void reportMetric(List<WorkerRunResult> workerRunResults) {
+    //Run experiment n times numConcurrentWorkloadThreads
+    for (int i = 0; i < numConcurrentWorkloadThreads; i++) {
+      List<Future<WorkerRunResult>> runResults = new ArrayList<>();
+      List<WorkerRunResult> workerRunResults = new ArrayList<>();
 
-    int successfulInteractions = 0;
-    long elapsedTimeInNanoSecs = 0;
-    int totalRuns = 0;
-    int successfulFrequentBookStoreInteractionRuns = 0;
-    int totalFrequentBookStoreInteractionRuns = 0;
+      // run experiment with i workers and save result
+      for (int j = 0; j <= i; j++) {
+        WorkloadConfiguration config = new WorkloadConfiguration(bookstore, stockmanager);
+        Worker workerTask = new Worker(config);
 
-    double aggregatedThroughput = 0;
-    double averageLatency = 0;
-    double throughPut;
+        // Keep the futures to wait for the result from the thread
+        runResults.add(exec.submit(workerTask));
+      }
 
-    for (WorkerRunResult workerRunResult : workerRunResults) {
-      successfulInteractions += workerRunResult.getSuccessfulInteractions();
-      totalRuns += workerRunResult.getTotalRuns();
-      elapsedTimeInNanoSecs += workerRunResult.getElapsedTimeInNanoSecs();
-      successfulFrequentBookStoreInteractionRuns += workerRunResult.getSuccessfulFrequentBookStoreInteractionRuns();
-      totalFrequentBookStoreInteractionRuns += workerRunResult.getTotalFrequentBookStoreInteractionRuns();
+      // Get the results from the threads using the futures returned
+      for (Future<WorkerRunResult> futureRunResult : runResults) {
+        WorkerRunResult runResult = futureRunResult.get(); // blocking call
+        workerRunResults.add(runResult);
+      }
 
-      throughPut = workerRunResult.getSuccessfulFrequentBookStoreInteractionRuns() / (double) workerRunResult.getElapsedTimeInNanoSecs();
-      aggregatedThroughput += throughPut;
-      averageLatency += 1f / throughPut;
+      //Add the experiment data to the results
+      totalWorkersRunResults.add(workerRunResults);
+      stockmanager.removeAllBooks();
     }
 
-    System.out.println("Successful Interactions: " + successfulInteractions);
-    System.out.println("Successful Frequent Bookstore Interaction Runs: " + successfulFrequentBookStoreInteractionRuns);
+    exec.shutdownNow(); // shutdown the executor
+    return totalWorkersRunResults;
+  }
 
-    System.out.println("Total runs: " + totalRuns);
-    System.out.println("Total Frequent Bookstore Interaction Runs: " + totalFrequentBookStoreInteractionRuns);
+  /**
+   * Computes the metrics and prints them
+   */
+  public static void reportMetric(List<List<WorkerRunResult>> totalWorkersRunResults,
+      List<List<WorkerRunResult>> rpcResults) throws IOException {
 
-    System.out.println("Elapsed Time: " + elapsedTimeInNanoSecs + "ns");
+    //get local metrics
+    List<Double> localLatency = new ArrayList<>();
+    List<Double> localThroughput = new ArrayList<>();
+    getMetricResults(totalWorkersRunResults, localLatency, localThroughput);
 
-    System.out.println("Aggregated Throughput: " + aggregatedThroughput);
-    System.out.println("Average Latency: " + averageLatency);
-	}
+    //get rpc metrics
+    List<Double> remoteLatency = new ArrayList<>();
+    List<Double> remoteThroughput = new ArrayList<>();
+    getMetricResults(rpcResults, remoteLatency, remoteThroughput);
 
-	/**
-	 * Generate the data in bookstore before the workload interactions are run
-	 * 
-	 * Ignores the serverAddress if its a localTest
-	 * 
-	 */
-	public static void initializeBookStoreData(StockManager stockManager) throws BookStoreException {
+    XYChart chart1 = createChart("Latency", localLatency, remoteLatency);
+    BitmapEncoder.saveBitmap(chart1, "../latency_chart", BitmapFormat.PNG);
+    //new SwingWrapper(chart1).displayChart();
 
-        // use the BookSet generator for generating random books (1000)
-		BookSetGenerator bookSetGenerator = new BookSetGenerator(false);
-		Set<StockBook> stockBookSet = bookSetGenerator.nextSetOfStockBooks(1000);
+    XYChart chart2 = createChart("Throughput", localThroughput, remoteThroughput);
+    BitmapEncoder.saveBitmap(chart2, "../throughput_chart", BitmapFormat.PNG);
+    //new SwingWrapper(chart2).displayChart();
 
-		//remove all books before, to be sure only the generated books are included
-		stockManager.removeAllBooks();
-		stockManager.addBooks(stockBookSet);
-	}
+  }
+
+  private static XYChart createChart(String title, List<Double> localData,
+      List<Double> remoteData) {
+
+    // x-axis label thread 1 until numConcurrentWorkloadThreads
+    double[] xLabels = IntStream.rangeClosed(1, numConcurrentWorkloadThreads).asDoubleStream()
+        .toArray();
+
+    XYChart chart = new XYChart(600, 400);
+    chart.setTitle(title);
+    chart.addSeries("local", xLabels,
+        localData.stream().mapToDouble(Double::doubleValue).toArray());
+    chart.addSeries("remote", xLabels,
+        remoteData.stream().mapToDouble(Double::doubleValue).toArray());
+    chart.getStyler().setYAxisLogarithmic(true);
+    return chart;
+  }
+
+  private static void getMetricResults(List<List<WorkerRunResult>> workerRunResults,
+      List<Double> latencyList, List<Double> throuputList) {
+    long totalRunTime = 0;
+    double aggThroughPut = 0;
+    double successfulInteractions;
+    double elapsedTimeInNanoSecs;
+    for (List<WorkerRunResult> workerRunResultList : workerRunResults) {
+      for (WorkerRunResult workerRunResult : workerRunResultList) {
+        successfulInteractions = workerRunResult.getSuccessfulInteractions();
+        elapsedTimeInNanoSecs = workerRunResult.getElapsedTimeInNanoSecs();
+        aggThroughPut += successfulInteractions / elapsedTimeInNanoSecs;
+        totalRunTime += workerRunResult.getElapsedTimeInNanoSecs();
+      }
+      double averageLatency = totalRunTime/ (double) workerRunResults.size();
+
+      latencyList.add(averageLatency);
+      throuputList.add(aggThroughPut);
+    }
+  }
+
+  /**
+   * Generate the data in bookstore before the workload interactions are run
+   *
+   * Ignores the serverAddress if its a localTest
+   */
+  public static void initializeBookStoreData(StockManager stockManager) throws BookStoreException {
+
+    // use the BookSet generator for generating random books (1000)
+    BookSetGenerator bookSetGenerator = new BookSetGenerator(false);
+    Set<StockBook> stockBookSet = bookSetGenerator.nextSetOfStockBooks(1000);
+
+    //remove all books before, to be sure only the generated books are included
+    stockManager.removeAllBooks();
+    stockManager.addBooks(stockBookSet);
+  }
 }
