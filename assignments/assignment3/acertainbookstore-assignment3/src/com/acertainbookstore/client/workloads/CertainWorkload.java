@@ -22,6 +22,9 @@ import org.knowm.xchart.BitmapEncoder;
 import org.knowm.xchart.BitmapEncoder.BitmapFormat;
 import org.knowm.xchart.SwingWrapper;
 import org.knowm.xchart.XYChart;
+import org.knowm.xchart.XYChartBuilder;
+import org.knowm.xchart.style.GGPlot2Theme;
+import org.knowm.xchart.style.Styler.ChartTheme;
 
 /**
  * CertainWorkload class runs the workloads by different workers concurrently. It configures the
@@ -109,10 +112,14 @@ public class CertainWorkload {
     getMetricResults(rpcResults, remoteLatency, remoteThroughput);
 
     XYChart chart1 = createChart("Latency", localLatency, remoteLatency);
+    chart1.setYAxisTitle("nanoseconds");
+    chart1.setXAxisTitle("Number of threads");
     BitmapEncoder.saveBitmap(chart1, "../latency_chart", BitmapFormat.PNG);
     //new SwingWrapper(chart1).displayChart();
 
     XYChart chart2 = createChart("Throughput", localThroughput, remoteThroughput);
+    chart2.setYAxisTitle("Successful interactions per ns");
+    chart2.setXAxisTitle("Number of threads");
     BitmapEncoder.saveBitmap(chart2, "../throughput_chart", BitmapFormat.PNG);
     //new SwingWrapper(chart2).displayChart();
 
@@ -125,7 +132,7 @@ public class CertainWorkload {
     double[] xLabels = IntStream.rangeClosed(1, numConcurrentWorkloadThreads).asDoubleStream()
         .toArray();
 
-    XYChart chart = new XYChart(600, 400);
+    XYChart chart = new XYChartBuilder().width(600).height(400).theme(ChartTheme.GGPlot2).build();
     chart.setTitle(title);
     chart.addSeries("local", xLabels,
         localData.stream().mapToDouble(Double::doubleValue).toArray());

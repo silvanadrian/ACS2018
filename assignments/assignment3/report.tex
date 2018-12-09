@@ -37,8 +37,25 @@ For measurements we changed the amount of concurrent clients to be able to plot 
 
 \section{Throughput and Latency plots}
 
+Well first of all we see that the latency for RPC calls is higher then the one for local ones, which is understandable since the calls have to be done via HTTP which matches with our expectation.
+\begin{figure}[htb!]
+	\includegraphics[width=\textwidth]{latency_chart}
+	\caption{Latency Chart}
+\end{figure}
 
 
+For throughput on the other hand the RPC calls gare better then the local ones, even with a higher amount of clients the throughput only increases slowly for RPC calls.
+So we suspect by using the serialization via the bookProxy or storeProxy and the parallelization of sending data, we get better metric for RPC calls.
+With that knowledge then the plot pretty much also fits our expectations.
+
+\begin{figure}[htb!]
+	\includegraphics[width=\textwidth]{throughput_chart}
+	\caption{Throughput chart}
+\end{figure}
+\newpage
 \section{Reliability}
+Since we don't have any knowledge of what would be a possible workload on the book store and our interactions more or less just try to imitate possible workloads they won't be very helpful for real world workloads.
+but with the metrics we at least have a possible starting point to go on.
 
+What would be nice to see the more interactions and clients there are how many interactions are not successful anymore, especially if it would get worse the more clients get added which would be nice to know.
 \end{document}}
