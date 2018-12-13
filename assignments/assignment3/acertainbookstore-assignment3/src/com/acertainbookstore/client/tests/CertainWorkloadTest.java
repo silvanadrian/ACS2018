@@ -10,22 +10,22 @@ import static junit.framework.TestCase.assertEquals;
 
 public class CertainWorkloadTest {
 
-    private CertainBookStore bookStore;
-    private CertainBookStore stockManager;
+  private CertainBookStore bookStore;
+  private CertainBookStore stockManager;
 
-    @BeforeClass
-    public void setUp() {
-        CertainBookStore store = new CertainBookStore();
-        bookStore = store;
-        stockManager = store;
-    }
+  @BeforeClass
+  public void setUp() {
+    CertainBookStore store = new CertainBookStore();
+    bookStore = store;
+    stockManager = store;
+  }
 
 
-    @Test
-    public void shouldInitializeBookStore() throws BookStoreException {
-        CertainWorkload.initializeBookStoreData(stockManager);
-        // initialize 1000 books
-        assertEquals(1000, bookStore.getBooks().size());
-    }
+  @Test
+  public void shouldInitializeBookStore() throws BookStoreException {
+    CertainWorkload.initializeBookStoreData(stockManager);
+    // initialize 1000 books
+    assertEquals(1000, bookStore.getBooks().size());
+  }
 
 }

@@ -1,6 +1,3 @@
-/**
- *
- */
 package com.acertainbookstore.client.workloads;
 
 import com.acertainbookstore.business.CertainBookStore;
@@ -20,10 +17,8 @@ import java.util.concurrent.Future;
 import java.util.stream.IntStream;
 import org.knowm.xchart.BitmapEncoder;
 import org.knowm.xchart.BitmapEncoder.BitmapFormat;
-import org.knowm.xchart.SwingWrapper;
 import org.knowm.xchart.XYChart;
 import org.knowm.xchart.XYChartBuilder;
-import org.knowm.xchart.style.GGPlot2Theme;
 import org.knowm.xchart.style.Styler.ChartTheme;
 
 /**
@@ -38,13 +33,13 @@ public class CertainWorkload {
    * @param args
    */
   public static void main(String[] args) throws Exception {
-    numConcurrentWorkloadThreads = 10;
+    numConcurrentWorkloadThreads = 20;
     String serverAddress = "http://localhost:8081";
 
     CertainBookStore store = new CertainBookStore();
-
     List<List<WorkerRunResult>> localResults = runWorkers(store, store);
 
+    // Bookstore HTTP Server needs to run otherwise won't be able to run Certain Workload
     StockManagerHTTPProxy stockManager = new StockManagerHTTPProxy(serverAddress + "/stock");
     BookStoreHTTPProxy bookStore = new BookStoreHTTPProxy(serverAddress);
     List<List<WorkerRunResult>> rpcResults = runWorkers(bookStore, stockManager);
@@ -66,7 +61,7 @@ public class CertainWorkload {
 
     ExecutorService exec = Executors.newFixedThreadPool(numConcurrentWorkloadThreads);
 
-    //Run experiment n times numConcurrentWorkloadThreads
+    //Run experiment numConcurrentWorkloadThreads times
     for (int i = 0; i < numConcurrentWorkloadThreads; i++) {
       List<Future<WorkerRunResult>> runResults = new ArrayList<>();
       List<WorkerRunResult> workerRunResults = new ArrayList<>();
@@ -145,20 +140,20 @@ public class CertainWorkload {
   private static void getMetricResults(List<List<WorkerRunResult>> workerRunResults,
       List<Double> latencyList, List<Double> throuputList) {
     long totalRunTime = 0;
-    double aggThroughPut = 0;
+    double aggregatedThroughPut = 0;
     double successfulInteractions;
     double elapsedTimeInNanoSecs;
     for (List<WorkerRunResult> workerRunResultList : workerRunResults) {
       for (WorkerRunResult workerRunResult : workerRunResultList) {
         successfulInteractions = workerRunResult.getSuccessfulInteractions();
         elapsedTimeInNanoSecs = workerRunResult.getElapsedTimeInNanoSecs();
-        aggThroughPut += successfulInteractions / elapsedTimeInNanoSecs;
+        aggregatedThroughPut += successfulInteractions / elapsedTimeInNanoSecs;
         totalRunTime += workerRunResult.getElapsedTimeInNanoSecs();
       }
       double averageLatency = totalRunTime/ (double) workerRunResults.size();
 
       latencyList.add(averageLatency);
-      throuputList.add(aggThroughPut);
+      throuputList.add(aggregatedThroughPut);
     }
   }
 

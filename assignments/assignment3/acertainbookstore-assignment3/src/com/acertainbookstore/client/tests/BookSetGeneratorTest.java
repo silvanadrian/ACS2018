@@ -13,22 +13,22 @@ import static junit.framework.TestCase.assertEquals;
 
 public class BookSetGeneratorTest {
 
-    private BookSetGenerator bookSetGenerator;
+  private BookSetGenerator bookSetGenerator;
 
-    @BeforeClass
-    public void setUp() {
-        bookSetGenerator = new BookSetGenerator(true);
-    }
+  @BeforeClass
+  public void setUp() {
+    bookSetGenerator = new BookSetGenerator(true);
+  }
 
-    @Test
-    public void shouldReturnRandomISBNS() {
-        Set<Integer> isbns = IntStream.rangeClosed(1, 9000).boxed().collect(Collectors.toSet());
-        assertEquals(30,bookSetGenerator.sampleFromSetOfISBNs(isbns,30).size());
-    }
+  @Test
+  public void shouldReturnRandomISBNS() {
+    Set<Integer> isbns = IntStream.rangeClosed(1, 9000).boxed().collect(Collectors.toSet());
+    assertEquals(30, bookSetGenerator.sampleFromSetOfISBNs(isbns, 30).size());
+  }
 
-    @Test
-    public void shouldReturnRandomBooks() {
-        Set<StockBook> bookSet = bookSetGenerator.nextSetOfStockBooks(100);
-        assertEquals(100, bookSet.size());
-    }
+  @Test
+  public void shouldReturnRandomBooks() {
+    Set<StockBook> bookSet = bookSetGenerator.nextSetOfStockBooks(100);
+    assertEquals(100, bookSet.size());
+  }
 }
