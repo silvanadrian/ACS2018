@@ -15,7 +15,6 @@ breaklines}
     pdfborder={0 0 0},
 }
 \begin{document}
-
 \title{ACS Programming Assignment 2}
 \subtitle{}
 
@@ -31,7 +30,7 @@ The other attributes we filled by the \texttt{Radnom} class which allowed us to 
 Overall we generate 1000 books for the database which have ISBNs from 1 to 1000, while for the interactions we used random ISBNs from (1 to 2000) so that there will be sometimes overlapping books (already existing in the database) and otherwise still have to be added to the database.
 To be able to distinguish between random and not random ISBNs we had to add a parameter to \texttt{BookSetGenerator} which allows us to configure it as wanted.
 
-We ran the experiments on a single machine with Mac OSX, 16 GB of RAM and an Intel Core i5 with 2 Cores (4 threads).
+We ran the experiments on a single machine with Mac OSX, 16 GB of RAM and an Intel Core i7 with 4 Cores (8 threads).
 
 For measurements we changed the amount of concurrent clients to be able to plot some sort of statistics which wouldn't be possible with single client runs.
 
@@ -58,4 +57,4 @@ Since we don't have any knowledge of what would be a possible workload on the bo
 but with the metrics we at least have a possible starting point to go on.
 
 What would be nice to see the more interactions and clients there are how many interactions are not successful anymore, especially if it would get worse the more clients get added which would be nice to know.
-\end{document}}
+\end{document}
