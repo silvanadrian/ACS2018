@@ -72,12 +72,65 @@ And the precedence graph of the first schedule shows that there is a cycle, whic
 \end{figure}
 
 \subsection{Task 2}
-
+T2 conflicts with T1 and T1 conflict with T3, so there is no cycle in the precedence graph.
+In T1 the transaction acquires locks for A, then T2 tries to get a shared lock on A which is then not possible since T1 already has an exclusive lock on A.
+\begin{table}[!htbp]
+    \centering
+    \begin{tabularx}{\textwidth}{l|l|l}
+        \hline
+        T1 & T2 & T3 \\ 
+        \hline
+        W(A)   &  	    &   			\\
+        	   & R(A)   & 			\\
+         	   & Commit & 			\\        
+               &        &  R(B) 		\\
+               &		&  Commit	\\
+        W(B)   & 		& 			\\
+        Commit & 		& 			\\     
+        \hline
+    \end{tabularx}
+\end{table}
 
 \subsection{Task 3}
+This satisfies 2PL, because it can release exclusive lock on B after it has written B, so T2 can acquire the exclusive lock on B.
+But it can't satisfy S2PL since T1 will keep the locks until it is finished with all it's operations, so that T2 can't acquire a exclusive lock on B.
 
+\begin{table}[!htbp]
+    \centering
+    \begin{tabularx}{\textwidth}{l|l}
+        \hline
+        T1 & T2 \\ 
+        \hline
+        W(A)   &  	    \\
+        W(B)   & 		\\        
+               & W(B)	\\
+        W(A)   & 		\\
+        Commit & 		\\ 
+        	   & Commit	\\      
+        \hline
+    \end{tabularx}
+\end{table}
 
 \subsection{Task 4}
+This satisfy S2PL, because the exclusive lock on B in T2 get's released directly after its write so that T1 can obtain the exclusive lock on B.
+But it can't satisfy CS2PL because T1 acquires all locks at the beginning, which means T2 can't obtain an exclusive lock on B.
+
+\begin{table}[!htbp]
+    \centering
+    \begin{tabularx}{\textwidth}{l|l}
+        \hline
+        T1 & T2 \\ 
+        \hline
+        W(A)   &  	    \\
+               & W(B)	\\
+        	   & Commit	\\                         
+        W(B)   & 		\\        
+        W(A)   & 		\\
+        Commit & 		\\     
+        \hline
+    \end{tabularx}
+\end{table}
+
 
 \section{Question 2: Recovery Concepts}
 \subsection{Task 1}
@@ -146,24 +199,22 @@ Locks are not waiting on each other and they get released on time before an othe
         Ta & Tb & Tc \\ 
         \hline
         S(Z) &  &  \\
-        R(Z) &  &  \\
-        Release(Z) &  &  \\        
+        R(Z) &  &  \\      
              & S(Y) & \\
              & R(Y) & \\
              & X(Y) & \\             
              & W(Y) & \\
 			 & Release(Y) & \\
-             &  & S(Z)\\             
-        	 &  & R(Z)\\
-			& & Release(Z) \\        	 
-       		& C & \\        	 
-        	& & X(Y) \\       		
-        	& & W(Y) \\
-			& & Release(Y) \\
+             &  		& S(Z)\\             
+        	 &  		& R(Z)\\      	 
+       		& C 		& \\        	 
+        	& 			& X(Y) \\       		
+        	& 			& W(Y) \\
+			& 			& Release(Y,Z) \\
         	& & C \\ 
 		X(Y) & &  \\  
         W(Y) & &  \\ 
-		Release(Y) & &  \\ 
+		Release(Y,Z) & &  \\ 
         C & &  \\   
         \hline
     \end{tabularx}
