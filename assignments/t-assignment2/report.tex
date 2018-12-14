@@ -28,6 +28,7 @@ breaklines}
 \section{Question 1: Concurrency Control Concepts}
 
 \subsection{Task 1}
+Following we have 2 schedules which are view equivalent. The first one is therefore view serializable.
 
 \begin{table}[!htbp]
     \centering
@@ -46,9 +47,36 @@ breaklines}
     \end{tabularx}
 \end{table}
 
+\begin{table}[!htbp]
+    \centering
+    \begin{tabularx}{\textwidth}{l|l|l}
+        \hline
+        T1 & T2 & T3 \\ 
+        \hline
+        R(A) &  &  \\
+        W(A) & & \\
+        Commit & & \\        
+             & W(A) & \\
+             & commit & \\
+        		& & W(A) \\
+        		& & Commit \\     
+        \hline
+    \end{tabularx}
+\end{table}
+
+And the precedence graph of the first schedule shows that there is a cycle, which means it's not conflict serializable.
+\begin{figure}
+	\center
+	\includegraphics{img/Q1-task1}
+	\caption{Precedence Graph for shedule}
+\end{figure}
+
 \subsection{Task 2}
 
+
 \subsection{Task 3}
+
+
 \subsection{Task 4}
 
 \section{Question 2: Recovery Concepts}
