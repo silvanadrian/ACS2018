@@ -27,7 +27,55 @@ breaklines}
 
 \section{Question 1: Concurrency Control Concepts}
 
+\subsection{Task 1}
+
+\begin{table}[!htbp]
+    \centering
+    \begin{tabularx}{\textwidth}{l|l|l}
+        \hline
+        T1 & T2 & T3 \\ 
+        \hline
+        R(A) &  &  \\
+             & W(A) & \\
+             & commit & \\
+        W(A) & & \\
+        Commit & & \\
+        		& & W(A) \\
+        		& & Commit \\     
+        \hline
+    \end{tabularx}
+\end{table}
+
+\subsection{Task 2}
+
+\subsection{Task 3}
+\subsection{Task 4}
+
 \section{Question 2: Recovery Concepts}
+\subsection{Task 1}
+We do not need a redo scheme, because all changes of committed transactions are guaranteed to have been written to disk at commit time.
+We also don't need the undo scheme, because the changes of those aborted transactions have not been written to disk.
+
+\subsection{Task 2}
+The difference of stable storage and non-volatile storage is that stable storage is implemented by maintaining multiple copies of information on non-volatile storage.
+Access time on non-volatile storage is therefore much faster than on stable storage.
+
+Non-volatile storage is guaranteed to survive crashes but can be subject to media failures, while stable storage is guaranteed to survive both.
+
+
+\subsection{Task 3}
+The log tail needs to be forced to stable storage in following 2 situations:
+\begin{itemize}
+	\item When a transaction is committed
+	\item After modifying of pages	
+\end{itemize}
+
+For the first situation, when a transaction is committed it has be ensured that the record of changes have been written in the log before it's written to disk.
+This way we know what changes have been done even after a crash.
+
+For the second situation, when a page gets modified we have to know that there has been a change without committing so that we are able to undo the not committed changes. 
+
+For both situations the durability is sufficient because we are able to undo modifications and ensure that all committed transactions survive a crash.
 
 \section{Question 3: More Concurrency Control}
 
