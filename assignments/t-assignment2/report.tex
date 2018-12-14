@@ -114,7 +114,7 @@ But it can't satisfy S2PL since T1 will keep the locks until it is finished with
 
 
 \subsection{Task 4}
-This satisfy S2PL, because the exclusive lock on B in T2 get's released directly after its write so that T1 can obtain the exclusive lock on B.
+This satisfies S2PL, because the exclusive lock on B in T2 get's released directly after its write so that T1 can obtain the exclusive lock on B.
 But it can't satisfy CS2PL because T1 acquires all locks at the beginning, which means T2 can't obtain an exclusive lock on B.
 
 \begin{table}[!htbp]
@@ -137,7 +137,7 @@ But it can't satisfy CS2PL because T1 acquires all locks at the beginning, which
 \section{Question 2: Recovery Concepts}
 \subsection{Task 1}
 We do not need a redo scheme, because all changes of committed transactions are guaranteed to have been written to disk at commit time.
-We also don't need the undo scheme, because the changes of those aborted transactions have not been written to disk.
+We also don't need the undo scheme, because the changes of aborted transactions have not been written to disk.
 
 \subsection{Task 2}
 The difference of stable storage and non-volatile storage is that stable storage is implemented by maintaining multiple copies of information on non-volatile storage.
@@ -387,7 +387,7 @@ T3 on the other hand had to be aborted since the undone process hasn't started y
         \hline
     \end{tabularx}
 \end{table}
-
+\newpage
 \subsection{Task 4}
 We understood that the log is still in stable storage and the database is in volatile storage and only gets saved to stable storage on particular log records.
 \subsubsection{a)}
