@@ -1,0 +1,27 @@
+\section{Question 1: Reliability}
+\subsection{1}
+A daisy-chain network has a graph consisting of links:
+\begin{align}
+l = n - 1 	
+\end{align}
+The probability of a failure is $p$, the probability that there is no error is therefore $1 - p$.
+So all connecting also means no link failure and since we assume that a link failure is independent. we then get:
+\begin{align}
+	(1-p)^{n-1}
+\end{align}
+
+\subsection{2}
+In the fully connected network there are 3 links that can fail and as long as 2 links are still fully functioning then also all the building are still connected.
+That 1 link fails we have the probability $p(1-p)^2$ and when 0 links fail: $(1-p)^3$.
+So we get that a fully-connected network is working is then:
+\begin{align}
+	3p(1-p)^2+(1-p)^3
+\end{align}
+\subsection{3}
+For above we have now the 2 probabilities from which we can calculate which is the more reliable solution:
+
+For Daisy Chain we get: $p_{d} = (1-0.000001)^{3-1} \approx 0.999998 $
+
+For fully connected we get: $p_{f} = 3*0.0001(1-0.0001)^2+(1-0.0001)^3 \approx 0.99999997$
+
+So we get that a fully connected with the less reliable links would offer a better solution for the town
