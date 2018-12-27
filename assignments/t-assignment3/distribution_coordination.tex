@@ -1,0 +1,5 @@
+\section{Question 3: Distributed Coordination}
+While the 2-Phase commit protocol can't recover on a failure of both the coordinator and a participant the 3-phase commit protocol can, this because of it's asynchronous nature.
+The 3-phase protocol introdruces for that the prepared for commit state.
+If a coordinator fails in 3-phase protocol before sending a \texttt{preCommit}, the participants will unanimously agree that the operation has been aborted.
+The coordinator will not send out \texttt{doCommit} messages until all prepared to commit haven been \texttt{acked}, this eliminates the possability that any of the participants completed the transactions before all participants were aware of it (which is one of the reasons that there can appear infinite blocking).
