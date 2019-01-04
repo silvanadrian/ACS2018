@@ -1,5 +1,12 @@
 \section{Question 2: Vector Clock}
 
+\begin{itemize}
+	\item \textbf{A1:}	If clock before and Message clock have the same value, Action \textbf{A1} will be performed.
+	\item \textbf{A2:} If clock before is on (0,0,0) then we run action \textbf{A2} for incrementing the clock and incorporate the update.
+	\item \textbf{A3:} If clock before has a higher value then (0,0,0) we will perform the action \textbf{A3} to merge clock before and message clock.
+\end{itemize}
+
+
 \begin{tabularx}{\columnwidth}{|X|X|X|X|X|}
   \hline
   Event & Clock Before & Message Clock & Action & Clock After\\
