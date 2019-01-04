@@ -29,7 +29,7 @@ Transaction 1 wants to write \texttt{C} and T3 reads \texttt{C}, so T1 has to wa
 
 
 \subsection{2}
-After putting all the wait for graphs together, we get the following graph.
+After putting all the wait for graphs together, we get the following global graph.
 
 \begin{figure}[htb!]
 	\center
@@ -38,5 +38,11 @@ After putting all the wait for graphs together, we get the following graph.
 \end{figure}
 
 \subsection{3}
-
--
+We don't see any scenario possible where T1 could commit, because we have a deadlock in the global waits for graph so every transaction is waiting on each other.
+So in the 2 phase commit protocol the transactions will never reach commit stage and will be aborted.
+If we take away T2 or T3 then it would be possible for T1 to commit.
+The message exchange would then look like:
+\begin{figure}[htb!]
+	\includegraphics[width=\textwidth]{img/2pcp}
+	\caption{2 Phase commit messages}
+\end{figure}
